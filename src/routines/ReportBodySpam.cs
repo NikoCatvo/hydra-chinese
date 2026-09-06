@@ -1,12 +1,13 @@
-﻿using UnityEngine;
+using HydraMenu.modules;
+using UnityEngine;
 
 namespace HydraMenu.routines
 {
-	public class ReportBodySpam : IRoutine
+	public class ReportBodySpam : Routine
 	{
-		public ReportBodySpam() : base("ReportBodySpam") { }
+		public ReportBodySpam() : base("刷报尸体") { }
 
-		public float reportDelay = 2.5f;
+		public readonly float REPORT_DELAY = 2.5f;
 		private float timeElapsed = 0f;
 
 		public override void Run()
@@ -14,7 +15,7 @@ namespace HydraMenu.routines
 			if(ShipStatus.Instance == null) return;
 
 			timeElapsed += Time.deltaTime;
-			if(timeElapsed < reportDelay) return;
+			if(timeElapsed < REPORT_DELAY) return;
 			timeElapsed = 0f;
 
 			PlayerControl player = Utilities.GetRandomPlayer(false, false, false, false);
@@ -27,27 +28,34 @@ namespace HydraMenu.routines
 			PlayerControl.LocalPlayer.RpcStartMeeting(player.Data);
 		}
 
-		public override void OnEnable()
+		private void OnDisconnect()
+		{
+			Hydra.notifications.Send("刷报尸体", "你离开了游戏，刷报尸体已禁用。", 10);
+			Enabled = false;
+		}
+
+		protected override void OnEnable()
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("Report Body Spam", "Report Body Spam can only be used once the game has started.", 10);
+				Hydra.notifications.Send("刷报尸体", "游戏开始后刷报尸体才能使用。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(!AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("Report Body Spam", "Report Body Spam can only be used if you are the host of the lobby.", 10);
+				Hydra.notifications.Send("刷报尸体", "刷报尸体仅可由大厅房主使用。", 10);
 				Enabled = false;
 				return;
 			}
+
+			EventCoordinator.OnDisconnect += OnDisconnect;
 		}
 
-		public override void OnDisconnect()
+		protected override void OnDisable()
 		{
-			Hydra.notifications.Send("Report Body Spam", "Report Body Spam was disabled as you left the game.", 10);
-			Enabled = false;
+			EventCoordinator.OnDisconnect -= OnDisconnect;
 		}
 	}
 }

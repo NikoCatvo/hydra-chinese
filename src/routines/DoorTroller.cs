@@ -1,12 +1,13 @@
-﻿using UnityEngine;
+using HydraMenu.modules;
+using UnityEngine;
 
 namespace HydraMenu.routines
 {
-	public class DoorTrollerRoutine : IRoutine
+	public class DoorTrollerRoutine : Routine
 	{
-		public DoorTrollerRoutine() : base("Door Troller") { }
+		public DoorTrollerRoutine() : base("门恶搞") { }
 
-		public float lockAndUnlockDelay = 0.5f;
+		public float LockAndUnlockDelay { get; set; } = 0.5f;
 		private float timeElapsed = 0f;
 		private bool doorsLocked = false;
 
@@ -15,7 +16,7 @@ namespace HydraMenu.routines
 			if(ShipStatus.Instance == null) return;
 
 			timeElapsed += Time.deltaTime;
-			if(timeElapsed < lockAndUnlockDelay) return;
+			if(timeElapsed < LockAndUnlockDelay) return;
 
 			if(doorsLocked)
 			{
@@ -30,34 +31,41 @@ namespace HydraMenu.routines
 			timeElapsed = 0;
 		}
 
-		public override void OnEnable()
+		private void OnDisconnect()
+		{
+			Hydra.notifications.Send("门恶搞", "你离开了游戏，门恶搞已禁用。", 10);
+			Enabled = false;
+		}
+
+		protected override void OnEnable()
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("Door Troller", "Door troller can only be used if the game has started.", 10);
+				Hydra.notifications.Send("门恶搞", "游戏开始后门恶搞才能使用。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(ShipStatus.Instance.AllDoors.Count == 0)
 			{
-				Hydra.notifications.Send("Door Troller", "Door troller can not be used as this map does not have any doors.", 10);
+				Hydra.notifications.Send("门恶搞", "当前地图没有任何门，无法使用门恶搞。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(!Sabotage.CanUnlockDoors())
 			{
-				Hydra.notifications.Send("Door Troller", "Door troller can only be used if you are the host, or if the current map supports unlocking doors.", 10);
+				Hydra.notifications.Send("门恶搞", "门恶搞仅可由大厅房主使用，或当前地图支持解锁门。", 10);
 				Enabled = false;
 				return;
 			}
+
+			EventCoordinator.OnDisconnect += OnDisconnect;
 		}
 
-		public override void OnDisconnect()
+		protected override void OnDisable()
 		{
-			Hydra.notifications.Send("Door Troller", "Door Troller was disabled as you left the game.", 10);
-			Enabled = false;
+			EventCoordinator.OnDisconnect -= OnDisconnect;
 		}
 	}
 }

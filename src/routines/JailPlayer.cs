@@ -1,24 +1,25 @@
-﻿using System.Collections.Generic;
+using HydraMenu.modules;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HydraMenu.routines
 {
-	// This could be implemented as a postix patch of CustomNetworkTransform::Deserialize or as a routine
-	// It took me a while, but I concluded that using a routine is a more elegant design choice
-	public class JailPlayerRoutine : IRoutine
+	// 这可以作为 CustomNetworkTransform::Deserialize 的后置补丁或作为例程实现
+	// 我花了一段时间，但得出结论使用例程是更优雅的设计选择
+	public class JailPlayerRoutine : Routine
 	{
-		public JailPlayerRoutine() : base("JailPlayer") { }
+		public JailPlayerRoutine() : base("关入牢房") { }
 
-		public HashSet<int> targets = new HashSet<int>();
+		public readonly HashSet<int> targets = new HashSet<int>();
 
-		// For the sake of performance, only check if players are outside of the jail every 500ms
-		public float delay = 0.5f;
+		// 为性能考虑，每 500ms 才检查一次玩家是否在牢房外
+		public readonly float DELAY = 0.5f;
 		private float timeElapsed = 0f;
 
 		public override void Run()
 		{
 			timeElapsed += Time.deltaTime;
-			if(timeElapsed < delay) return;
+			if(timeElapsed < DELAY) return;
 			timeElapsed = 0f;
 
 			GetMapData(out SystemTypes jailRoom, out int ventId);
@@ -35,8 +36,8 @@ namespace HydraMenu.routines
 			}
 		}
 
-		// The RoomTracker::GetRoomForPlayer function returns a string with the player's current whereabouts
-		// however it will throw an error if you are not the detective and the player not inside a room but rather near it
+		// RoomTracker::GetRoomForPlayer 函数返回玩家当前位置的字符串
+		// 但如果你不是侦探且玩家不在房间内而是在附近，它会抛出错误
 		private SystemTypes GetRoomForPlayer(PlayerControl player)
 		{
 			foreach(PlainShipRoom room in ShipStatus.Instance.AllRooms)
@@ -85,7 +86,7 @@ namespace HydraMenu.routines
 					ventId = 4;
 					break;
 
-				// Default to the Skeld values
+				// 默认使用 Skeld 的值
 				default:
 					room = SystemTypes.Nav;
 					ventId = 12;
@@ -93,25 +94,29 @@ namespace HydraMenu.routines
 			}
 		}
 
-		public override void OnEnable()
+		private void OnDisconnect()
+		{
+			Hydra.notifications.Send("关入牢房", "你离开了游戏，关入牢房已禁用。", 10);
+			Enabled = false;
+		}
+
+		protected override void OnEnable()
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("Jail Player", "Jail Player can only be used inside of a game.", 10);
+				Hydra.notifications.Send("关入牢房", "关入牢房只能在游戏中使用。", 10);
 				Enabled = false;
 				return;
 			}
+
+			EventCoordinator.OnDisconnect += OnDisconnect;
 		}
 
-		public override void OnDisable()
+		protected override void OnDisable()
 		{
 			targets.Clear();
-		}
 
-		public override void OnDisconnect()
-		{
-			Hydra.notifications.Send("Jail Player", "Jail Player has been disabled as you left the game.", 10);
-			Enabled = false;
+			EventCoordinator.OnDisconnect -= OnDisconnect;
 		}
 	}
 }

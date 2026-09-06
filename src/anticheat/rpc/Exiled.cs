@@ -1,17 +1,17 @@
-﻿using Hazel;
+using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class Exiled : RpcCheck
 	{
-		public override void Validate(PlayerControl player, MessageReader reader, ref bool blockRpc)
+		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
-			// The Exiled RPC is unused and is never sent in-game
-			Anticheat.Flag(player, $"{player.Data.PlayerName} sent an invalid Exiled RPC.");
-			blockRpc = true;
+			// Exiled RPC 未使用且在游戏中从不发送
+			Anticheat.Flag(player, $"{player.Data.PlayerName} 发送了无效的 Exiled RPC。");
+			return false;
 		}
 
-		public override RpcCalls GetRpcCall()
+		public override RpcCalls GetId()
 		{
 			return RpcCalls.Exiled;
 		}

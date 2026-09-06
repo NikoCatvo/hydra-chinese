@@ -1,36 +1,35 @@
-﻿using Hazel;
+using Hazel;
 using System;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class ExitVent : RpcCheck
 	{
-		// Sending ExitVent RPCs can be used to make the player teleport to areas without having to send SnapTo RPCs
-		public override void Validate(PlayerControl player, MessageReader reader, ref bool blockRpc)
+		// 发送 ExitVent RPC 可用于让玩家传送到区域，而无需发送 SnapTo RPC
+		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
 			if(ShipStatus.Instance == null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} tried to exit a vent when there is no instance of ShipStatus.");
-				blockRpc = true;
-				return;
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在不存在 ShipStatus 实例时尝试退出通风管道。");
+				return false;
 			}
 
 			if(!player.Data.IsDead && !player.Data.Role.CanVent)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} tried to exit a vent when their role ({player.Data.RoleType}) does not support venting.");
-				blockRpc = true;
-				return;
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在其角色 ({player.Data.RoleType}) 不支持通风管道时尝试退出通风管道。");
+				return false;
 			}
 
 			if(GameManager.Instance.IsHideAndSeek() && RoleManager.IsImpostorRole(player.Data.RoleType))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} tried to exit a vent while being the seeker.");
-				blockRpc = true;
-				return;
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 作为搜寻者时尝试退出通风管道。");
+				return false;
 			}
+
+			return true;
 		}
 
-		public override RpcCalls GetRpcCall()
+		public override RpcCalls GetId()
 		{
 			return RpcCalls.ExitVent;
 		}

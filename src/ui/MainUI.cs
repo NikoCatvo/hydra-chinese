@@ -1,4 +1,4 @@
-﻿using HydraMenu.ui.sections;
+using HydraMenu.ui.sections;
 using System;
 using UnityEngine;
 
@@ -6,7 +6,8 @@ namespace HydraMenu.ui
 {
 	public class MainUI : MonoBehaviour
 	{
-		// Current window
+		// 当前窗口
+		public KeyCode menuKey = KeyCode.Insert;
 		public bool visible = false;
 		public static float scale = 1.0f;
 
@@ -31,7 +32,7 @@ namespace HydraMenu.ui
 		}
 
 		// UI Section Pane
-		private readonly ISection[] sections = { new GeneralSection(), new SelfSection(), new TrollSection(), new SabotageSection(), new HostSection(), new RolesSection(), new PlayersSection(), new MovementSection(), new VisualSection(), new ProtectionsSection(), new AnticheatSection(), new SpooferSection(), new MenuSection() };
+		private readonly Section[] sections = { new GeneralSection(), new SelfSection(), new TrollSection(), new SabotageSection(), new HostSection(), new RolesSection(), new PlayersSection(), new MovementSection(), new VisualSection(), new ProtectionsSection(), new AnticheatSection(), new SpooferSection(), new MenuSection() };
 		public byte activeTab = 0;
 
 		public static Vector2 SectionListSize
@@ -62,18 +63,26 @@ namespace HydraMenu.ui
 
 		public void Update()
 		{
-			if(Input.GetKeyDown(KeyCode.Insert)) visible = !visible;
+			Event currentEvent = Event.current;
+			if(currentEvent == null) return;
 
-			// Tool to test the notifications system
+			// Input::GetKeyDown(KeyCodes.Insert) 如果按下专用 Insert 键返回 true，但小键盘 Insert 键不返回
+			// 所以我们必须依赖 Event.current
+			if(currentEvent.type == EventType.KeyDown && currentEvent.keyCode == menuKey)
+			{
+				visible = !visible;
+			}
+
+			// 用于测试通知系统的工具
 			if(Input.GetKeyDown(KeyCode.F6))
 			{
 				System.Random random = new System.Random();
-				Hydra.notifications.Send("Test", $"The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. The quick brown fox jumped over the lazy dog. {random.Next(0, 100)}");
+				Hydra.notifications.Send("测试", $"敏捷的棕色狐狸跳过了懒狗。{random.Next(0, 100)}");
 			}
 
 			if(!visible) return;
 
-			// Handle changing the current section through arrow keys
+			// 通过方向键处理当前分区的切换
 			if(Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
 			{
 				int offset = Input.GetKeyDown(KeyCode.UpArrow) ? -1 : 1;
@@ -98,14 +107,14 @@ namespace HydraMenu.ui
 
 			GUI.skin.label.fontSize = (int)(13 * scale);
 
-			// Render UI box
-			GUI.Box(new Rect(windowPosition.x, windowPosition.y, WindowSize.x, WindowSize.y), $"{MyPluginInfo.PLUGIN_NAME} - {MyPluginInfo.PLUGIN_VERSION}", Styles.MainBox);
+			// 渲染 UI 盒子
+			GUI.Box(new Rect(windowPosition.x, windowPosition.y, WindowSize.x, WindowSize.y), $"{MyPluginInfo.PLUGIN_NAME} - {MyPluginInfo.PLUGIN_VERSION} 汉化by小紫 上传by微生猫 https://github.com/NikoCatvo/hydra-chinese", Styles.MainBox);
 
 			for(byte i = 0; i < sections.Length; i++)
 			{
-				ISection section = sections[i];
+				Section section = sections[i];
 
-				// Add the tab to the left-pane
+				// 将标签页添加到左侧面板
 				RenderTab(i, section);
 
 				if(i == activeTab)
@@ -129,8 +138,8 @@ namespace HydraMenu.ui
 
 			switch(currentEvent.type)
 			{
-				// I tried using currentEvent.delta to get the delta between the last mouse position and the current one,
-				// however I noticed it would 'skip' quite frequently resulting in the window box not properly lining up where it should actually be dragged
+// 我尝试使用 currentEvent.delta 获取上一个鼠标位置和当前位置的增量，
+			// 但我发现它会频繁"跳过"，导致窗口盒子无法正确对齐到实际拖拽位置
 				case EventType.MouseDown:
 					if(!IsInBox(mousePos)) break;
 
@@ -160,7 +169,7 @@ namespace HydraMenu.ui
 				mousePos.y <= (windowPosition.y + WindowSize.y);
 		}
 
-		private void RenderTab(byte position, ISection section)
+		private void RenderTab(byte position, Section section)
 		{
 			Rect rect = new Rect(
 				SectionListPosition.x,
@@ -174,6 +183,42 @@ namespace HydraMenu.ui
 			{
 				activeTab = position;
 			}
+		}
+
+		public class MainUIConfig
+		{
+			public KeyCode MenuKey { get; set; }
+			public Styles.UIColors PrimaryColor { get; set; }
+			public float MenuOpacity { get; set; }
+			public float UiScale { get; set; }
+			public bool DisableNotifications { get; set; }
+		}
+
+		public MainUIConfig GetConfigData()
+		{
+			return new MainUIConfig
+			{
+				MenuKey = menuKey,
+				PrimaryColor = Styles.primaryColor,
+				MenuOpacity = Styles.menuOpacity,
+				UiScale = scale,
+				DisableNotifications = Hydra.notifications.disableNotifications
+			};
+		}
+
+		public void LoadConfigData(MainUIConfig configData)
+		{
+			if(configData == null) return;
+
+			if(configData.MenuKey != KeyCode.None)
+			{
+				Hydra.mainUI.menuKey = configData.MenuKey;
+			}
+
+			Styles.primaryColor = (Styles.UIColors)Math.Clamp((int)configData.PrimaryColor, 0, Styles.ColorValues.Count - 1);
+			Styles.menuOpacity = Mathf.Clamp(configData.MenuOpacity, 0.0f, 1.0f);
+			scale = Mathf.Clamp(configData.UiScale, 0.5f, 2.0f);
+			Hydra.notifications.disableNotifications = configData.DisableNotifications;
 		}
 	}
 }

@@ -1,0 +1,68 @@
+using UnityEngine;
+
+namespace HydraMenu.modules.visuals
+{
+	internal class ShowGhostMessages : Module
+	{
+		public ShowGhostMessages() : base("显示幽灵消息")
+		{
+			base.Enabled = true;
+		}
+
+		private void OnPlayerChat(PlayerControl player, string text)
+		{
+			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null || PlayerControl.LocalPlayer.Data.IsDead || !player.Data.IsDead) return;
+
+			// 没有快速简单的方法让幽灵的消息在我们存活时显示在聊天中
+			// 我们必须重新实现 ChatController::AddChat 方法并自己构建聊天气泡
+			ChatController chatController = HudManager.Instance.Chat;
+			ChatBubble bubble = chatController.GetPooledBubble();
+			try
+			{
+				bubble.transform.SetParent(chatController.scroller.Inner);
+				bubble.transform.localScale = Vector3.one;
+
+				if(player == PlayerControl.LocalPlayer)
+				{
+					bubble.SetRight();
+				}
+				else
+				{
+					bubble.SetLeft();
+				}
+
+				bubble.SetCosmetics(player.Data);
+				chatController.SetChatBubbleName(bubble, player.Data, player.Data.IsDead, false, PlayerNameColor.Get(player.Data), null);
+				bubble.SetText(text);
+				bubble.AlignChildren();
+				chatController.AlignAllBubbles();
+				chatController.chatNotification.SetUp(player, text);
+
+				if(!chatController.IsOpenOrOpening && chatController.notificationRoutine == null)
+				{
+					chatController.notificationRoutine = chatController.StartCoroutine(chatController.BounceDot());
+				}
+
+				if(player != PlayerControl.LocalPlayer && !chatController.IsOpenOrOpening)
+				{
+					SoundManager.Instance.PlaySound(chatController.messageSound, false, 1f, null).pitch = 0.5f + player.PlayerId / 15f;
+					chatController.chatNotification.SetUp(player, text);
+				}
+			}
+			catch
+			{
+				HudManager.Instance.Chat.chatBubblePool.Reclaim(bubble);
+			}
+		}
+
+		protected override void OnEnable()
+		{
+			EventCoordinator.OnPlayerChat += OnPlayerChat;
+		}
+
+		protected override void OnDisable()
+		{
+			EventCoordinator.OnPlayerChat -= OnPlayerChat;
+		}
+	}
+}

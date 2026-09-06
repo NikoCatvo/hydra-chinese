@@ -1,7 +1,7 @@
-﻿using AmongUs.Data;
+using AmongUs.Data;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
 using HydraMenu.assets;
-using HydraMenu.features;
+using HydraMenu.modules;
 using HydraMenu.network;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace HydraMenu.ui.sections
 {
-	internal class SelfSection : ISection
+	internal class SelfSection : Section
 	{
 		public SelfSection() : base("自身") { }
 
@@ -17,18 +17,19 @@ namespace HydraMenu.ui.sections
 		{
 			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null)
 			{
-				GUILayout.Label("你当前不在游戏中，这些选项将无法生效。");
+				GUILayout.Label("你当前不在游戏中，这些选项将无法使用。");
 			}
 			else
 			{
-				GUILayout.Label($"身份: {PlayerControl.LocalPlayer.Data.RoleType}");
+				GUILayout.Label($"角色: {PlayerControl.LocalPlayer.Data.RoleType}");
 			}
 
-			Self.UpdateStatsFreeplay.Enabled = GUILayout.Toggle(Self.UpdateStatsFreeplay.Enabled, "在自由模式中更新统计数据");
-			Immortality.Enabled = GUILayout.Toggle(Immortality.Enabled, "无敌");
-			Self.AlwaysShowTaskAnimations = GUILayout.Toggle(Self.AlwaysShowTaskAnimations, "始终显示任务动画");
-			Self.NoLadderCooldown.Enabled = GUILayout.Toggle(Self.NoLadderCooldown.Enabled, "无梯子冷却");
-			Self.UnlimitedMeetings.enabled = GUILayout.Toggle(Self.UnlimitedMeetings.enabled, "无限会议");
+			ModuleManager.alwaysShowTaskAnimations.Enabled = GUILayout.Toggle(ModuleManager.alwaysShowTaskAnimations.Enabled, "始终显示任务动画");
+			ModuleManager.immortality.Enabled = GUILayout.Toggle(ModuleManager.immortality.Enabled, "获得不死之身");
+			ModuleManager.noLadderCooldown.Enabled = GUILayout.Toggle(ModuleManager.noLadderCooldown.Enabled, "无梯子冷却");
+			ModuleManager.noZiplineCooldown.Enabled = GUILayout.Toggle(ModuleManager.noZiplineCooldown.Enabled, "无滑索冷却");
+			ModuleManager.unlimitedMeetings.Enabled = GUILayout.Toggle(ModuleManager.unlimitedMeetings.Enabled, "无限召集会议");
+			ModuleManager.updateStatsFreeplay.Enabled = GUILayout.Toggle(ModuleManager.updateStatsFreeplay.Enabled, "自由模式下更新统计数据");
 
 			if(GUILayout.Button("召集会议"))
 			{
@@ -42,12 +43,12 @@ namespace HydraMenu.ui.sections
 
 			GUILayout.Label("任务动画:");
 			GUILayout.BeginHorizontal();
-			if(GUILayout.Button("开始医疗舱扫描"))
+			if(GUILayout.Button("开始医疗扫描"))
 			{
 				RPCEmitter.SendSetScanner(true);
 			}
 
-			if(GUILayout.Button("结束医疗舱扫描"))
+			if(GUILayout.Button("完成医疗扫描"))
 			{
 				RPCEmitter.SendSetScanner(false);
 			}
@@ -57,20 +58,20 @@ namespace HydraMenu.ui.sections
 			Controls.DrawButtonCell(animations, PlayAnimation, 2);
 
 			GUILayout.Space(5);
-			GUILayout.Label("形象控制:");
-			if(GUILayout.Button("随机化形象"))
+			GUILayout.Label("角色控制:");
+			if(GUILayout.Button("随机化角色"))
 			{
 				if(AmongUsClient.Instance.AmConnected)
 				{
 					Utilities.RandomizePlayer(true);
 
-					Hydra.notifications.Send("形象随机器", "你的形象已在本局游戏中随机化。", 5);
+					Hydra.notifications.Send("角色随机化", "你的角色已在此局游戏中随机化。", 5);
 				}
 				else
 				{
 					Utilities.RandomizePlayer();
 
-					Hydra.notifications.Send("形象随机器", "你的名字和形象已被随机化。", 5);
+					Hydra.notifications.Send("角色随机化", "你的名称和角色已随机化。", 5);
 				}
 			}
 
@@ -79,7 +80,7 @@ namespace HydraMenu.ui.sections
 				PlayerControl.LocalPlayer.CmdCheckColor((byte)Utilities.GetRandomUnusedColor());
 			}
 
-			if(GUILayout.Button("还原形象"))
+			if(GUILayout.Button("恢复角色"))
 			{
 				PlayerControl.LocalPlayer.CmdCheckColor(DataManager.Player.Customization.Color);
 				PlayerControl.LocalPlayer.RpcSetHat(DataManager.Player.Customization.Hat);
@@ -93,18 +94,20 @@ namespace HydraMenu.ui.sections
 		{
 			Il2CppSystem.Collections.Generic.List<PlayerTask> allTasks = PlayerControl.LocalPlayer.myTasks;
 
-			Hydra.Log.LogInfo("Completing all tasks...");
+			Hydra.Log.LogInfo("正在完成所有任务...");
 			foreach(PlayerTask task in allTasks)
 			{
 				if(task.IsComplete)
 				{
-					Hydra.Log.LogInfo($"Task {task.Id} has already been completed, skipping");
+					Hydra.Log.LogInfo($"任务 {task.Id} 已完成，跳过");
 					continue;
 				}
 
-				Hydra.Log.LogInfo($"Sent CompleteTask RPC for task {task.Id}");
+				Hydra.Log.LogInfo($"发送完成任务 RPC，任务 ID: {task.Id}");
 				PlayerControl.LocalPlayer.RpcCompleteTask(task.Id);
 
+				// 如果要完成超过六个任务，需要实现延迟
+				// 否则原版反作弊会因违反速率限制而将我们踢出
 				yield return Effects.Wait(0.05f);
 			}
 
@@ -115,13 +118,13 @@ namespace HydraMenu.ui.sections
 		{
 			if(PlayerControl.LocalPlayer == null)
 			{
-				Hydra.notifications.Send("播放动画", "此选项只能在游戏内使用。");
+				Hydra.notifications.Send("播放动画", "此选项只能在游戏中使用。");
 				return;
 			}
 
 			if(ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("播放动画", "此功能需要存在 ShipStatus 实例才能生效。");
+				Hydra.notifications.Send("播放动画", "必须存在 ShipStatus 实例才能使用此功能。");
 				return;
 			}
 

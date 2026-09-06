@@ -1,4 +1,4 @@
-﻿using AmongUs.InnerNet.GameDataMessages;
+using AmongUs.InnerNet.GameDataMessages;
 using HarmonyLib;
 using Hazel;
 using HydraMenu.anticheat.gamedata;
@@ -12,14 +12,15 @@ namespace HydraMenu.anticheat
 	{
 		public static bool Enabled { get; set; } = true;
 
-		public static Dictionary<GameDataTypes, GameDataCheck> GameDataHandlers = new Dictionary<GameDataTypes, GameDataCheck>()
+		public static readonly Dictionary<GameDataTypes, GameDataCheck> GameDataHandlers = new Dictionary<GameDataTypes, GameDataCheck>()
 		{
+			{ GameDataTypes.SceneChangeFlag, new SceneChange() },
 			{ GameDataTypes.ReadyFlag, new ClientReady() }
 		};
 
-		public static Dictionary<RpcCalls, RpcCheck> RpcHandlers = new Dictionary<RpcCalls, RpcCheck>()
+		public static readonly Dictionary<RpcCalls, RpcCheck> RpcHandlers = new Dictionary<RpcCalls, RpcCheck>()
 		{
-			// RPC handlers in this dictionary should be sorted by their RPC ID
+			// 此字典中的 RPC 处理程序应按其 RPC ID 排序
 			{ RpcCalls.PlayAnimation, new PlayAnimation() },
 			{ RpcCalls.CompleteTask, new CompleteTask() },
 			{ RpcCalls.Exiled, new Exiled() },
@@ -99,26 +100,25 @@ namespace HydraMenu.anticheat
 
 			if(sourceNetObj != rpcCheck.GetExpectedNetObject())
 			{
-				// Recieved a RPC that should've been sent for a different net object, some sort of exploit attempt?
+				// 收到本应发送给不同网络对象的 RPC，某种漏洞利用尝试？
 				return false;
 			}
 
-			// Only we, the host, should be sending host-only RPCs
+			// 只有我们（房主）应该发送仅房主 RPC
 			if(player != null && AmongUsClient.Instance.AmHost && rpcCheck.IsHostOnly())
 			{
-				Flag(player, $"{player.Data.PlayerName} sent the {rpc} RPC while non-host.");
+				Flag(player, $"{player.Data.PlayerName} 非房主却发送了 {rpc} RPC。");
 				return false;
 			}
 
 			int oldReadPosition = reader.Position;
-			bool blockRpc = false;
 
-			rpcCheck.Validate(player, reader, ref blockRpc);
-			if(discardRpc && blockRpc) return false;
+			bool isValid = rpcCheck.Validate(player, reader);
 
-			// Put the read position back to its previous spot to not mess up the HandleRpc function
+			// 将读取位置恢复到之前的位置，以免搞乱 HandleRpc 函数或其他补丁
 			reader.Position = oldReadPosition;
-			return true;
+
+			return isValid || !discardRpc;
 		}
 
 		public static bool HandleGameData(GameDataTypes type, MessageReader reader)
@@ -127,26 +127,25 @@ namespace HydraMenu.anticheat
 			if(!Enabled || gameDataCheck == null || !gameDataCheck.Enabled) return true;
 
 			int oldReadPosition = reader.Position;
-			bool blockMessage = false;
 
-			gameDataCheck.Validate(reader, ref blockMessage);
-			if(discardRpc && blockMessage) return false;
+			bool isValid = gameDataCheck.Validate(reader);
 
-			// Put the read position back to its previous spot
+			// 将读取位置恢复到之前的位置
 			reader.Position = oldReadPosition;
-			return true;
+
+			return isValid || !discardRpc;
 		}
 
 		public static void Flag(PlayerControl player, string reason, bool shouldPunish = true)
 		{
-			// Sanity check, make sure that we are not flagging ourselves
-			// On servers without net object impersonation checks, it may be possible to send an invalid RPC on the behalf of the host
-			// which would result in Hydra Anticheat flagging ourselves and banning us from our own lobby
+			// 理智检查，确保我们没有标记自己
+			// 在没有网络对象冒充检查的服务器上，可能会代表房主发送无效 RPC
+			// 这会导致 Hydra 反作弊标记自己并将自己从自己的大厅封禁
 			if(player == PlayerControl.LocalPlayer) return;
 
 			if(sendNotification)
 			{
-				Hydra.notifications.Send("Anticheat", reason, NotificationDuration);
+				Hydra.notifications.Send("反作弊", reason, NotificationDuration);
 			}
 
 			if(AmongUsClient.Instance.AmHost && shouldPunish)
@@ -155,12 +154,12 @@ namespace HydraMenu.anticheat
 			}
 		}
 
-		// If we do not know which player caused the violation
+		// 如果我们不知道是哪个玩家导致的违规
 		public static void Flag(string reason)
 		{
 			if(sendNotification)
 			{
-				Hydra.notifications.Send("Anticheat", reason, NotificationDuration);
+				Hydra.notifications.Send("反作弊", reason, NotificationDuration);
 			}
 		}
 
@@ -173,29 +172,58 @@ namespace HydraMenu.anticheat
 
 				case Punishments.Kick:
 				case Punishments.ErrorKick:
-					Hydra.Log.LogMessage($"{player.Data.PlayerName} was kicked by Hydra Anticheat for hacking");
+					Hydra.Log.LogMessage($"{player.Data.PlayerName} 因作弊被 Hydra 反作弊踢出");
 
-					// The vanilla anticheat prevents using the ErrorKick method if the game has not started yet
+					// 原版反作弊在游戏尚未开始时不允许使用 ErrorKick 方法
 					if(punishment == Punishments.Kick || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
 					{
 						AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
 					}
 					else
 					{
-						// When a game starts, the host waits around ten seconds to wait for all clients to send the ClientReady game message
-						// If the ten second timer is reached without a ClientReady game message being received by the host, the host will kick the player due to timeout
-						// The kick message shown to the player will explain that the player has a poor internet connection or that their device is too old
-						// and in-game, players will be shown that the player left due to an error instead of being kicked
-						// Any other disconnection messages other than ClientTimeout will result in the vanilla anticheat kicking us from the lobby
+						// 当游戏开始时，房主会等待约十秒等待所有客户端发送 ClientReady 游戏消息
+						// 如果在计时器结束前房主未收到玩家的 ClientReady 游戏消息，房主会因超时将玩家踢出
+						// 玩家看到的踢出消息会解释其网络连接不佳或设备过旧
+						// 而游戏内其他玩家会看到该玩家因错误离开，而不是被踢出
+						// 除 ClientTimeout 外的任何其他断开连接消息都会导致原版反作弊将我们从大厅踢出
 						AmongUsClient.Instance.SendLateRejection(player.OwnerId, DisconnectReasons.ClientTimeout);
 					}
 					break;
 
 				case Punishments.Ban:
-					Hydra.Log.LogMessage($"{player.Data.PlayerName} was automatically banned by Hydra Anticheat for hacking");
+					Hydra.Log.LogMessage($"{player.Data.PlayerName} 因作弊被 Hydra 反作弊自动封禁");
 					AmongUsClient.Instance.KickPlayer(player.OwnerId, true);
 					break;
 			}
+		}
+
+		public class AnticheatConfigData
+		{
+			public bool AcEnabled { get; set; }
+			public bool SendNotification { get; set; }
+			public bool DiscardRpc { get; set; }
+			public Punishments Punishment { get; set; }
+		}
+
+		public static AnticheatConfigData GetConfigData()
+		{
+			return new AnticheatConfigData
+			{
+				AcEnabled = Enabled,
+				SendNotification = sendNotification,
+				DiscardRpc =  discardRpc,
+				Punishment = punishment,
+			};
+		}
+
+		public static void LoadConfigData(AnticheatConfigData configData)
+		{
+			if(configData == null) return;
+
+			Enabled = configData.AcEnabled;
+			sendNotification = configData.SendNotification;
+			discardRpc = configData.DiscardRpc;
+			punishment = configData.Punishment;
 		}
 	}
 }

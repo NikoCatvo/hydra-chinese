@@ -1,34 +1,33 @@
-﻿using Hazel;
+using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class SetColor : RpcCheck
 	{
-		public override void Validate(PlayerControl player, MessageReader reader, ref bool blockRpc)
+		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
 			uint netId = reader.ReadUInt32();
 			byte color = reader.ReadByte();
 
-			// This net id field written in the RPC is seemingly useless as the client RPC handler does not do anything with this value
+			// RPC 中写入的这个 net id 字段看似毫无用处，因为客户端 RPC 处理程序不使用此值
 			if(netId != player.Data.NetId)
 			{
-				blockRpc = true;
-				Anticheat.Flag(player, $"SetColor RPC sent for {player.Data.PlayerName} contains invalid net id, expected {player.Data.NetId}, received {netId}", false);
+				Anticheat.Flag(player, $"为 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效网络 ID，预期 {player.Data.NetId}，收到 {netId}", false);
+				player.SetColor((byte)CrewmateColor.Red);
+				return false;
 			}
 
 			if(color >= Palette.ColorNames.Length)
 			{
-				blockRpc = true;
-				Anticheat.Flag(player, $"SetColor RPC sent for {player.Data.PlayerName} contains an invalid color: {color}", false);
+				Anticheat.Flag(player, $"为 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效颜色: {color}", false);
+				player.SetColor((byte)CrewmateColor.Red);
+				return false;
 			}
 
-			if(blockRpc)
-			{
-				player.SetColor((byte)CrewmateColor.Red);
-			}
+			return true;
 		}
 
-		public override RpcCalls GetRpcCall()
+		public override RpcCalls GetId()
 		{
 			return RpcCalls.SetColor;
 		}

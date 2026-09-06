@@ -1,49 +1,72 @@
-﻿namespace HydraMenu.routines
-{
-	public class PlayerFollowerRoutine : IRoutine
-	{
-		public PlayerFollowerRoutine() : base("PlayerFollower") { }
+using HydraMenu.modules;
+using InnerNet;
+using UnityEngine;
 
-		public PlayerControl following;
+namespace HydraMenu.routines
+{
+	public class PlayerFollowerRoutine : Routine
+	{
+		public PlayerFollowerRoutine() : base("玩家跟随") { }
+
+		public PlayerControl target;
 
 		public override void Run()
 		{
 			if(PlayerControl.LocalPlayer == null) return;
 
-			if(following == null)
-			{
-				Enabled = false;
-				return;
-			}
-
 			/*
-			float distance = Vector3.Distance(following.transform.position, PlayerControl.LocalPlayer.transform.position);
+			float distance = Vector3.Distance(target.transform.position, PlayerControl.LocalPlayer.transform.position);
 			if(distance > 2)
 			{
-				Hydra.Log.LogInfo($"We drifted too far away from the player we are following, teleporting back to course. Distance: {distance}");
-				Teleporter.TeleportTo(following.transform.position);
+				Hydra.Log.LogInfo($"我们偏离跟随的玩家太远，传送回原位。距离: {distance}");
+				Teleporter.TeleportTo(target.transform.position);
 			}
 			*/
 
-			// We could probably see how haunting as a ghost makes the follower walks towards a player's position so we don't have to directly teleport, but this works fine for now
-			PlayerControl.LocalPlayer.transform.position = following.transform.position;
+			// 我们大概可以看看幽灵附身如何让跟随者走向玩家位置，这样我们就不必直接传送，但现在这样也可以
+			PlayerControl.LocalPlayer.transform.position = target.transform.position;
 		}
 
-		public override void OnEnable()
+		private void OnDisconnect()
 		{
-			PlayerControl.LocalPlayer.moveable = false;
-		}
-
-		public override void OnDisable()
-		{
-			following = null;
-			if(PlayerControl.LocalPlayer != null) PlayerControl.LocalPlayer.moveable = true;
-		}
-
-		public override void OnDisconnect()
-		{
-			Hydra.notifications.Send("Player Follower", "Player Follower was disabled as you left the game.", 10);
+			Hydra.notifications.Send("跟随玩家", "你离开了游戏，跟随玩家已禁用。", 10);
 			Enabled = false;
+		}
+
+		private void OnPlayerDisconnect(ClientData client, DisconnectReasons reason)
+		{
+			if(client.Character != target) return;
+
+			Hydra.notifications.Send("跟随玩家", "你跟随的玩家离开了游戏，跟随玩家已禁用。");
+			Enabled = false;
+		}
+
+		protected override void OnEnable()
+		{
+			if(PlayerControl.LocalPlayer == null)
+			{
+				_enabled = false;
+				return;
+			}
+
+			PlayerControl.LocalPlayer.moveable = false;
+			PlayerControl.LocalPlayer.NetTransform.body.velocity = Vector2.zero;
+
+			EventCoordinator.OnDisconnect += OnDisconnect;
+			EventCoordinator.OnPlayerDisconnect += OnPlayerDisconnect;
+		}
+
+		protected override void OnDisable()
+		{
+			target = null;
+
+			if(PlayerControl.LocalPlayer != null)
+			{
+				PlayerControl.LocalPlayer.moveable = true;
+			}
+
+			EventCoordinator.OnDisconnect -= OnDisconnect;
+			EventCoordinator.OnPlayerDisconnect -= OnPlayerDisconnect;
 		}
 	}
 }

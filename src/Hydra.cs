@@ -1,39 +1,75 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using HydraMenu.features;
+using HydraMenu.modules;
 using HydraMenu.routines;
 using HydraMenu.ui;
+using UnityEngine;
 
 namespace HydraMenu;
 
-[BepInPlugin("com.mrd.hydramenu", "Hydra", "1.9.0.0")]
+[BepInPlugin("com.mrd.hydramenu", "Hydra", "2.0.0.0")]
 [BepInProcess("Among Us.exe")]
 internal class Hydra : BasePlugin
 {
 	internal static new ManualLogSource Log;
+	private static readonly Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+	public static readonly ConfigManager config = new ConfigManager();
 
-	public static RoutineManager routines;
+	public static MainUI mainUI;
 	public static NotificationManager notifications;
+	public static ModuleManager modules;
+	public static RoutineManager routines;
 
 	public override void Load()
 	{
-		Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
-		harmony.PatchAll();
+		Log = base.Log;
 
-		AddComponent<MainUI>();
-		AddComponent<Roles>();
-
+		mainUI = AddComponent<MainUI>();
 		notifications = AddComponent<NotificationManager>();
+		modules = AddComponent<ModuleManager>();
 		routines = AddComponent<RoutineManager>();
 
-		Log = base.Log;
-		Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} has loaded!");
+		try
+		{
+			harmony.PatchAll();
+		}
+		catch
+		{
+			notifications.Send("致命错误", "Harmony 补丁加载失败，你很可能在使用不受支持的版本。请访问 https://github.com/MrDiamond64/Hydra 获取更多信息。", 9999);
+			throw;
+		}
 
-		// 集中注册所有开关，并从配置文件自动读取（进游戏即生效）
-		Profile.RegisterAll();
-		Profile.Load();
+		config.Initialize();
+
+		Log.LogInfo($"插件 {MyPluginInfo.PLUGIN_GUID} 已加载!");
+	}
+
+	public static void Eject()
+	{
+		harmony.UnpatchSelf();
+
+		notifications.ClearNotifications();
+
+		// 有些模块和例程在 OnDisable 方法中包含清理工作，我们需要触发它们
+		foreach(Module module in ModuleManager.moduleList)
+		{
+			module.Enabled = false;
+		}
+
+		foreach(Routine routine in routines.routineList)
+		{
+			routine.Enabled = false;
+		}
+
+		Object.Destroy(mainUI);
+		Object.Destroy(notifications);
+		Object.Destroy(modules);
+		Object.Destroy(routines);
+
+		ModManager.Instance.ModStamp.enabled = false;
+		ModManager.Instance.gameObject.SetActive(false);
 	}
 
 	[HarmonyPatch(typeof(MainMenuManager), nameof(MainMenuManager.Awake))]
@@ -41,7 +77,7 @@ internal class Hydra : BasePlugin
 	{
 		public static void Postfix()
 		{
-			Log.LogInfo("Adding mod stamp");
+			Log.LogInfo("添加模组标记");
 			ModManager.Instance.ShowModStamp();
 		}
 	}

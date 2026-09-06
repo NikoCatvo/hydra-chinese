@@ -1,16 +1,13 @@
-﻿using HydraMenu.features;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
 {
-	internal class GeneralSection : ISection
+	internal class GeneralSection : Section
 	{
-		public GeneralSection() : base("综合") { }
+		public GeneralSection() : base("常规") { }
 
 		public override void Render() {
-			GUILayout.Label("欢迎使用 Hydra！Hydra 是一个用于提升 Among Us 游戏体验的实用、管理与整蛊菜单。我们提供各种便利功能、可以和一小群好友一起搞怪同乐的功能，以及帮助你守护房间、抵御恶意玩家的功能。其中大部分功能属于整蛊类，因为作者本人主要是在和朋友的私人房间里使用它。希望你（以及和你一起玩的人）也能用 Hydra 玩得开心，或者用它保护自己不受作弊者的侵扰。\n\n由于 Hydra 的部分功能可能被用于作弊，必须明确声明：请勿使用 Hydra 破坏其他玩家的游戏体验。有些人也许刚结束一天的工作或学习，只想安安静静玩一局 Among Us。用 Hydra 去毁掉房间，是在破坏别人的心情、剥夺他们的乐趣。如果这还不足以说服你，那你也该知道：滥用模组进行恶意行为，可能会导致你的账号受到封禁处罚。");
-
-			Chat.OnChat.LogChatMessages = GUILayout.Toggle(Chat.OnChat.LogChatMessages, "在控制台记录聊天消息");
+			GUILayout.Label("欢迎使用 Hydra！Hydra 是一个实用、管理和恶搞菜单，旨在增强 Among Us 的游戏体验。我们提供生活质量功能、供你和一群朋友一起玩乐的功能，以及帮助保护你的大厅免受恶意玩家侵害的功能。大部分功能属于恶搞类别，因为我个人制作这个主要是为了和朋友在私人大厅里玩。希望你（以及你一起玩的人）也能享受使用 Hydra 游戏或保护自己免受黑客侵害的乐趣。\n\n既然 Hydra 的某些功能可用于作弊，我必须明确说明：Hydra 不应被用于损害其他玩家的体验。有些人可能刚下完班或放学，只想轻松玩一局 Among Us。如果你用 Hydra 破坏大厅，就是在毁掉别人的一天，剥夺他们的乐趣。如果这还不够说服你，请知悉：滥用模组进行恶意行为可能导致你的账号受到制裁。");
 
 			if(GUILayout.Button("清除通知"))
 			{

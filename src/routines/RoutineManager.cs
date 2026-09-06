@@ -1,28 +1,34 @@
-﻿using HarmonyLib;
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using UnityEngine;
 
 namespace HydraMenu.routines
 {
 	internal class RoutineManager : MonoBehaviour
 	{
-		public AutoTriggerSporesRoutine autoTriggerSpores = new AutoTriggerSporesRoutine();
-		public DiscoHostRoutine discoHost = new DiscoHostRoutine();
-		public DoorTrollerRoutine doorTroller = new DoorTrollerRoutine();
-		public JailPlayerRoutine jailPlayer = new JailPlayerRoutine();
-		public PlayerFollowerRoutine playerFollower = new PlayerFollowerRoutine();
-		public ReportBodySpam reportBodySpam = new ReportBodySpam();
-		public TeleportSpammer teleportSpammer = new TeleportSpammer();
+		public readonly AutoTriggerSporesRoutine autoTriggerSpores = new AutoTriggerSporesRoutine();
+		public readonly DiscoHostRoutine discoHost = new DiscoHostRoutine();
+		public readonly DoorTrollerRoutine doorTroller = new DoorTrollerRoutine();
+		public readonly GlitterBomb glitterBomb = new GlitterBomb();
+		public readonly JailPlayerRoutine jailPlayer = new JailPlayerRoutine();
+		public readonly PetPlayerRoutine petPlayer = new PetPlayerRoutine();
+		public readonly PlayerFollowerRoutine playerFollower = new PlayerFollowerRoutine();
+		public readonly ReportBodySpam reportBodySpam = new ReportBodySpam();
+		public readonly TeleportSpammer teleportSpammer = new TeleportSpammer();
+		public readonly VoteSpammer voteSpammer = new VoteSpammer();
+		public readonly ZiplineSpammer ziplineSpammer = new ZiplineSpammer();
 
-		public IRoutine[] routineList = [];
+		public readonly Routine[] routineList;
 
 		public RoutineManager()
 		{
-			routineList = [ autoTriggerSpores, discoHost, doorTroller, jailPlayer, playerFollower, reportBodySpam, teleportSpammer ];
+			routineList = [ autoTriggerSpores, discoHost, doorTroller, glitterBomb, jailPlayer, petPlayer, playerFollower, reportBodySpam, teleportSpammer, voteSpammer, ziplineSpammer ];
 		}
 
 		public void Update()
 		{
-			foreach(IRoutine routine in routineList)
+			foreach(Routine routine in routineList)
 			{
 				if(!routine.Enabled) continue;
 
@@ -30,19 +36,32 @@ namespace HydraMenu.routines
 			}
 		}
 
-		[HarmonyPatch(typeof(GameData), nameof(GameData.OnDisconnected))]
-		class DisconnectHandler
+		// 返回每个例程及其名称的字典，以及每个属性名称和值的字典
+		public Dictionary<string, Dictionary<string, JsonElement>> GetConfigData()
 		{
-			static void Prefix()
+			Dictionary<string, Dictionary<string, JsonElement>> routineConfig = new Dictionary<string, Dictionary<string, JsonElement>>();
+
+			foreach(Routine routine in routineList)
 			{
-				Hydra.Log.LogInfo("Player disconnected from the lobby, disabling relevant routines");
+				routineConfig.Add(routine.name, routine.GetConfigData());
+			}
 
-				foreach(IRoutine routine in Hydra.routines.routineList)
+			return routineConfig;
+		}
+
+		public void LoadConfigData(Dictionary<string, Dictionary<string, JsonElement>> routineConfig)
+		{
+			foreach((string routineName, Dictionary<string, JsonElement> configData) in routineConfig)
+			{
+				int routineIndex = Array.FindIndex(routineList, r => r.name == routineName);
+				if(routineIndex == -1)
 				{
-					if(!routine.Enabled) continue;
-
-					routine.OnDisconnect();
+					Hydra.Log.LogWarning($"配置中存在例程 {routineName} 的条目，但不存在此例程");
+					continue;
 				}
+
+				Routine routine = routineList[routineIndex];
+				routine.LoadConfigData(configData);
 			}
 		}
 	}

@@ -2,25 +2,25 @@
 using HarmonyLib;
 using Hazel;
 using HydraMenu.anticheat;
-using HydraMenu.features;
+using HydraMenu.modules;
 using InnerNet;
 
 namespace HydraMenu.network
 {
 	internal class DataHandler
 	{
-		// On Vanilla servers, messages are limited to at most 1201 bytes
-		// On Modded Nikocat servers, messages are limited to at most 1400 bytes
-		// This value should be 1500 bytes at most, as at that point messages will likely not be recieved by some clients due to exceeding MTU size
-		// 1400 bytes seems to be the sweet spot, as it is enough to support modded servers, and also enough to prevent attacks with large messages
-		public static int MAX_MESSAGE_LENGTH = 1400;
+		// 在原版服务器上，消息最大限制为 1201 字节
+		// 在模组版 Nikocat 服务器上，消息最大限制为 1400 字节
+		// 消息无论如何不应大于 1500 字节，因为此时可能因超过 MTU 大小而导致某些客户端无法接收
+		// 1400 字节似乎是最佳平衡点，既能支持模组服务器，也能防止大消息攻击
+		public static readonly int MAX_MESSAGE_LENGTH = 1400;
 
 		[HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleGameData))]
 		class HandleGameData
 		{
 			static bool Prefix(InnerNetClient __instance, MessageReader parentReader)
 			{
-				if(Protections.BlockLargeGameMessages && parentReader.Length > MAX_MESSAGE_LENGTH)
+				if(ModuleManager.antiOverload.Enabled && ModuleManager.antiOverload.BlockLargeGameMessages && parentReader.Length > MAX_MESSAGE_LENGTH)
 				{
 					parentReader.Recycle();
 					return false;
@@ -47,7 +47,7 @@ namespace HydraMenu.network
 		{
 			GameDataTypes type = (GameDataTypes)reader.Tag;
 
-			if(Protections.BlockInvalidGameDataMessages && (type == GameDataTypes.Invalid || type == (GameDataTypes)3 || type > GameDataTypes.ReadyFlag))
+			if(ModuleManager.antiOverload.Enabled && ModuleManager.antiOverload.BlockInvalidGameDataMessages && (type == GameDataTypes.Invalid || type == (GameDataTypes)3 || type > GameDataTypes.ReadyFlag))
 			{
 				reader.Recycle();
 				return;

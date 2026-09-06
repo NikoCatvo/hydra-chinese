@@ -1,30 +1,32 @@
-﻿using Hazel;
+using Hazel;
 using System;
-using UnityEngine;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class SnapTo : RpcCheck
 	{
-		public override void Validate(PlayerControl player, MessageReader reader, ref bool blockRpc)
+		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
-			Vector2 position = NetHelpers.ReadVector2(reader);
+			// Vector2 position = NetHelpers.ReadVector2(reader);
 			// ushort seqId = reader.ReadUInt16();
 
 			if(LobbyBehaviour.Instance != null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} sent the SnapTo RPC while inside the lobby.");
-				blockRpc = true;
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在大厅内发送了 SnapTo RPC。");
+
+				// 我们无法在原版服务器上使用其他玩家的 NetTransform net id 发送 SnapTo RPC
+				if(AmongUsClient.Instance.AmHost && !Utilities.IsAnticheatPresent())
+				{
+					player.NetTransform.RpcSnapTo(player.transform.position);
+				}
+
+				return false;
 			}
 
-			// We are not able to send SnapTo RPCs with other player's NetTransform net ids on Vanilla servers
-			if(blockRpc && (AmongUsClient.Instance.AmHost && !Utilities.IsAnticheatPresent()))
-			{
-				player.NetTransform.RpcSnapTo(player.transform.position);
-			}
+			return true;
 		}
 
-		public override RpcCalls GetRpcCall()
+		public override RpcCalls GetId()
 		{
 			return RpcCalls.SnapTo;
 		}

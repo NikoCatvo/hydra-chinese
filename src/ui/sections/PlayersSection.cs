@@ -1,16 +1,18 @@
-﻿using AmongUs.Data;
+using AmongUs.Data;
 using AmongUs.GameOptions;
 using BepInEx.Unity.IL2CPP.Utils.Collections;
-using HydraMenu.features;
+using HydraMenu.assets;
+using HydraMenu.modules;
 using HydraMenu.network;
 using InnerNet;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
 {
-	internal class PlayersSection : ISection
+	internal class PlayersSection : Section
 	{
 		public PlayersSection() : base("玩家") { }
 
@@ -47,8 +49,8 @@ namespace HydraMenu.ui.sections
 		public static PlayerControl selectedPlayer;
 		private Vector2 subsectionScrollVector;
 
-		private static Controls.PlayerColors selectedColor = Controls.PlayerColors.Red;
-		private static int selectedVent = 0;
+		private Controls.PlayerColors selectedColor = Controls.PlayerColors.Red;
+		private int selectedVent = 0;
 
 		public override void HandleSubsectionMove(int offset)
 		{
@@ -73,6 +75,7 @@ namespace HydraMenu.ui.sections
 			for(byte i = 0; i < PlayerControl.AllPlayerControls.Count; i++)
 			{
 				PlayerControl player = PlayerControl.AllPlayerControls[i];
+				// 等待玩家数据完全加载
 				if(player.Data == null) continue;
 
 				RenderPlayerSelection(i, player);
@@ -101,7 +104,7 @@ namespace HydraMenu.ui.sections
 
 			if(player.OwnerId == AmongUsClient.Instance.HostId)
 			{
-				style.normal.textColor = new Color(1.0f, 0.84f, 0.0f);
+				style.normal.textColor = new Color(1.0f, 0.84f, 0.0f); // #FFD700
 			}
 
 			if(GUI.Button(playerInfo, playerName, style))
@@ -118,7 +121,7 @@ namespace HydraMenu.ui.sections
 			return RoleManager.IsImpostorRole(role) ? "red" : "#8afcfc";
 		}
 
-		private static void RenderPlayerControls(PlayerControl target)
+		private void RenderPlayerControls(PlayerControl target)
 		{
 			if(target == null || target.Data == null)
 			{
@@ -128,9 +131,11 @@ namespace HydraMenu.ui.sections
 
 			bool hasAnticheat = Utilities.IsAnticheatPresent();
 
+			// 如果我们要获取玩家姓名，必须使用 NetworkedPlayerInfo::PlayerName 而非 PlayerControl::name，避免
+			// 在玩家变身为另一名玩家时获取到错误的姓名
 			string playerInfo =
-				$"名字: {target.Data.PlayerName} ({Utilities.GetPlayerColor(target.Data)})" +
-				$"\n身份: {target.Data.RoleType}" +
+				$"名称: {target.Data.PlayerName} ({Utilities.GetPlayerColor(target.Data)})" +
+				$"\n角色: {target.Data.RoleType}" +
 				$"\n状态: " + (target.Data.IsDead ? "死亡" : "存活");
 
 			ClientData clientData = AmongUsClient.Instance.GetClientFromCharacter(target);
@@ -150,24 +155,29 @@ namespace HydraMenu.ui.sections
 
 			GUILayout.Label(playerInfo);
 
-			Hydra.routines.playerFollower.Enabled = Controls.PlayerSpecificToggle("跟随", target, ref Hydra.routines.playerFollower.following);
-			Hydra.routines.jailPlayer.Enabled = Controls.PlayerSpecificToggle("关进监狱", target, ref Hydra.routines.jailPlayer.targets);
+			ModuleManager.spectatePlayer.Enabled = Controls.PlayerSpecificToggle("观战", target, ref ModuleManager.spectatePlayer.target);
+			Hydra.routines.petPlayer.Enabled = Controls.PlayerSpecificToggle("宠物玩家", target, ref Hydra.routines.petPlayer.target);
+			Hydra.routines.playerFollower.Enabled = Controls.PlayerSpecificToggle("跟随", target, ref Hydra.routines.playerFollower.target);
+			Hydra.routines.jailPlayer.Enabled = Controls.PlayerSpecificToggle("关入牢房", target, Hydra.routines.jailPlayer.targets);
+			Hydra.routines.teleportSpammer.Enabled = Controls.PlayerSpecificToggle("传送刷屏", target, Hydra.routines.teleportSpammer.targets);
+			Hydra.routines.ziplineSpammer.Enabled = Controls.PlayerSpecificToggle("滑索刷屏", target, Hydra.routines.ziplineSpammer.targets);
 
 			GUILayout.BeginHorizontal();
-			if(GUILayout.Button("传送到"))
+			if(GUILayout.Button("传送"))
 			{
-				HydraMenu.Teleporter.TeleportTo(target.transform.position);
+				// 我们不在这里使用 PlayerControl::GetTruePosition()，因为它会把我们传送到玩家的脚底
+				Teleporter.TeleportTo(target.transform.position);
 			}
 
 			if(!hasAnticheat && GUILayout.Button("传送到我这"))
 			{
-				HydraMenu.Teleporter.TeleportPlayerTo(target, PlayerControl.LocalPlayer.transform.position);
+				Teleporter.TeleportPlayerTo(target, PlayerControl.LocalPlayer.transform.position);
 			}
 			GUILayout.EndHorizontal();
 
-			if(!hasAnticheat && GUILayout.Button("将所有人传送到此"))
+			if(!hasAnticheat && GUILayout.Button("将所有人传送至"))
 			{
-				HydraMenu.Teleporter.TeleportAllTo(target.transform.position);
+				Teleporter.TeleportAllTo(target.transform.position);
 			}
 
 			if(GUILayout.Button("击杀"))
@@ -175,7 +185,7 @@ namespace HydraMenu.ui.sections
 				AttemptMurder(target);
 			}
 
-			if(GUILayout.Button("复制形象"))
+			if(GUILayout.Button("复制角色"))
 			{
 				Utilities.CopyPlayer(target);
 			}
@@ -190,30 +200,34 @@ namespace HydraMenu.ui.sections
 				Utilities.KickPlayer(target);
 			}
 
-			GUILayout.Label($"将玩家传送到通风口: {selectedVent}");
-			selectedVent = (int)GUILayout.HorizontalSlider(selectedVent, 0, (ShipStatus.Instance != null ? ShipStatus.Instance.AllVents.Count - 1 : 10));
+			SortedDictionary<int, string> vents = MapAssets.GetVents();
+
+			GUILayout.Label($"将玩家传送到通风口: {vents.GetValueOrDefault(selectedVent, "不适用")}");
+			selectedVent = Controls.HorizontalVentSlider(vents, selectedVent);
 			if(GUILayout.Button("传送"))
 			{
-				HydraMenu.Teleporter.TeleportToVent(target, selectedVent);
+				Teleporter.TeleportToVent(target, selectedVent);
 			}
 
 			GUILayout.Space(5);
-			GUILayout.Label("仅房主可用功能:" + (AmongUsClient.Instance.AmHost ? "" : "\n(使用这些会导致你被踢出！)"));
+			GUILayout.Label("仅房主功能:" + (AmongUsClient.Instance.AmHost ? "" : "\n(使用这些会被踢出!)"));
 
-			Troll.AutoReportBodies.Enabled = Controls.PlayerSpecificToggle("以此身份自动报告尸体", target, ref Troll.AutoReportBodies.source);
-			Hydra.routines.discoHost.Enabled = Controls.PlayerSpecificToggle("蹦迪模式", target, ref Hydra.routines.discoHost.targets);
+			ModuleManager.autoReportBodies.Enabled = Controls.PlayerSpecificToggle("以该玩家自动报尸体", target, ref ModuleManager.autoReportBodies.target);
+			Hydra.routines.discoHost.Enabled = Controls.PlayerSpecificToggle("迪斯科模式", target, Hydra.routines.discoHost.targets);
+			ModuleManager.voteImmune.Enabled = Controls.PlayerSpecificToggle("投票免疫", target, ModuleManager.voteImmune.targets);
+			Hydra.routines.voteSpammer.Enabled = Controls.PlayerSpecificToggle("以该玩家刷投票", target, Hydra.routines.voteSpammer.targets);
 
-			if(GUILayout.Button("以此身份强制召集会议"))
+			if(GUILayout.Button("以该玩家强制召开会议"))
 			{
 				Utilities.AttemptStartMeeting(target, null);
 			}
 
 			GUILayout.BeginHorizontal();
-			if(GUILayout.Button("强制所有票投给"))
+			if(GUILayout.Button("强制所有投票指向"))
 			{
 				if(MeetingHud.Instance == null)
 				{
-					Hydra.notifications.Send("投票强制器", "此选项只能在有进行中的会议时使用。");
+					Hydra.notifications.Send("投票强制器", "此选项只能在有活跃会议时使用。");
 				}
 				else
 				{
@@ -230,12 +244,12 @@ namespace HydraMenu.ui.sections
 					}
 
 					BatchedMessage batch = new BatchedMessage();
-					batch.QueueVotingComplete(array, target.Data, false);
+					batch.QueueVotingComplete(array, target.Data, false, false, 0);
 					batch.FinishBatch();
 				}
 			}
 
-			if(GUILayout.Button("放逐"))
+			if(GUILayout.Button("驱逐"))
 			{
 				BatchedMessage batch = new BatchedMessage();
 
@@ -247,25 +261,26 @@ namespace HydraMenu.ui.sections
 
 				MeetingHud.VoterState[] votes = Array.Empty<MeetingHud.VoterState>();
 
-				batch.QueueVotingComplete(votes, target.Data, false);
+				batch.QueueVotingComplete(votes, target.Data, false, false, 0);
+				// 如果我们创建了 MeetingHud 对象，它会被 RpcClose 函数销毁
 				batch.QueueCloseMeeting();
 				batch.FinishBatch();
 			}
 			GUILayout.EndHorizontal();
 
-			if(GUILayout.Button("嫁祸变形"))
+			if(GUILayout.Button("伪装变身"))
 			{
 				PlayerControl randomPl = Utilities.GetRandomPlayer(false, false, false, false);
 				Utilities.ShapeshiftPlayer(target, randomPl);
 			}
 
-			if(GUILayout.Button("嫁祸其杀光所有人"))
+			if(GUILayout.Button("栽赃其击杀所有人"))
 			{
 				target.StartCoroutine(AttemptFrameForKillingAll(target).WrapToIl2Cpp());
 			}
 
 			GUILayout.BeginHorizontal();
-			if(GUILayout.Button("给玩家灌满任务"))
+			if(GUILayout.Button("以任务淹没玩家"))
 			{
 				byte[] taskIds = new byte[255];
 
@@ -277,14 +292,14 @@ namespace HydraMenu.ui.sections
 				target.Data.RpcSetTasks(taskIds);
 			}
 
-			if(GUILayout.Button("清空任务"))
+			if(GUILayout.Button("清除任务"))
 			{
 				target.Data.RpcSetTasks(Array.Empty<byte>());
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.Space(5);
-			GUILayout.Label("游戏选项修改器:");
+			GUILayout.Label("游戏选项修改:");
 
 			GUILayout.BeginHorizontal();
 			if(GUILayout.Button("致盲"))
@@ -315,8 +330,9 @@ namespace HydraMenu.ui.sections
 				GameOptions.SendGameOptionsToClient(gameOptions, target.OwnerId);
 			}
 
-			if(GUILayout.Button("超速"))
+			if(GUILayout.Button("极速"))
 			{
+				// 原版反作弊阻止我们超过 3.0f 的速度
 				float maxSpeed = Utilities.IsAnticheatPresent() ? 3.0f : 5.0f;
 
 				IGameOptions gameOptions = GameOptions.CreateCloneOptions(GameManager.Instance.LogicOptions.currentGameOptions);
@@ -326,14 +342,35 @@ namespace HydraMenu.ui.sections
 			}
 			GUILayout.EndHorizontal();
 
-			if(GUILayout.Button("重置为默认"))
+			/*
+			// 更改 TaskBarMode 的问题在于移除任务栏后我们无法恢复它
+			GUILayout.BeginHorizontal();
+			if(GUILayout.Button("隐藏任务栏"))
+			{
+				IGameOptions gameOptions = GameOptions.CreateCloneOptions(GameManager.Instance.LogicOptions.currentGameOptions);
+				gameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Invisible);
+
+				GameOptions.SendGameOptionsToClient(gameOptions, target.OwnerId);
+			}
+
+			if(GUILayout.Button("显示任务栏"))
+			{
+				IGameOptions gameOptions = GameOptions.CreateCloneOptions(GameManager.Instance.LogicOptions.currentGameOptions);
+				gameOptions.SetInt(Int32OptionNames.TaskBarMode, (int)TaskBarMode.Normal);
+
+				GameOptions.SendGameOptionsToClient(gameOptions, target.OwnerId);
+			}
+			GUILayout.EndHorizontal();
+			*/
+
+			if(GUILayout.Button("重置为默认值"))
 			{
 				IGameOptions gameOptions = GameOptions.CreateCloneOptions(GameManager.Instance.LogicOptions.currentGameOptions);
 				GameOptions.SendGameOptionsToClient(gameOptions, target.OwnerId);
 			}
 
 			GUILayout.Space(5);
-			GUILayout.Label($"改变颜色为: {selectedColor}");
+			GUILayout.Label($"改颜色为: {selectedColor}");
 			selectedColor = Controls.HorizontalColorSlider(selectedColor);
 
 			if(GUILayout.Button("设置颜色"))
@@ -348,13 +385,13 @@ namespace HydraMenu.ui.sections
 
 			if(hasAnticheat && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
 			{
-				Hydra.notifications.Send("击杀玩家", $"只有游戏开始后才能击杀玩家。");
+				Hydra.notifications.Send("击杀玩家", $"游戏开始后才能击杀玩家。");
 				return;
 			}
 
 			if(AmongUsClient.Instance.AmHost)
 			{
-				Hydra.Log.LogInfo($"Attempting to murder {target.Data.PlayerName}, we are the host so we can use the MurderPlayer RPC");
+				Hydra.Log.LogInfo($"尝试击杀 {target.Data.PlayerName}，我们是房主，可以使用 MurderPlayer RPC");
 				PlayerControl.LocalPlayer.RpcMurderPlayer(target, true);
 				Hydra.notifications.Send("击杀玩家", $"已击杀 {target.Data.PlayerName}。", 5);
 				return;
@@ -362,23 +399,25 @@ namespace HydraMenu.ui.sections
 
 			if(!hasAnticheat)
 			{
-				Hydra.Log.LogInfo($"Attempting to murder {target.Data.PlayerName}, we are are in a host-authoritative lobby so we can use the MurderPlayer RPC");
+				Hydra.Log.LogInfo($"尝试击杀 {target.Data.PlayerName}，我们在房主主导的大厅中，可以使用 MurderPlayer RPC");
 				PlayerControl.LocalPlayer.RpcMurderPlayer(target, true);
 				Hydra.notifications.Send("击杀玩家", $"已击杀 {target.Data.PlayerName}。", 5);
 				return;
 			}
 
-			Hydra.Log.LogInfo($"Attempting to kill {target.Data.PlayerName}, we are not the host so we have to use the CheckMurder RPC");
+			Hydra.Log.LogInfo($"尝试击杀 {target.Data.PlayerName}，我们不是房主，必须使用 CheckMurder RPC");
 
+			// CheckMurder RPC 处理器不会授权非内鬼或在会议中的击杀
+			// 还有更多检查，但我觉得没必要全部加在这里
 			if(!RoleManager.IsImpostorRole(PlayerControl.LocalPlayer.Data.RoleType))
 			{
-				Hydra.notifications.Send("击杀玩家", "除非你是房间的房主，否则只有身为内鬼时才能击杀玩家。");
+				Hydra.notifications.Send("击杀玩家", "只有你是内鬼时才能击杀玩家，除非你是大厅房主。");
 				return;
 			}
 
 			if(MeetingHud.Instance != null)
 			{
-				Hydra.notifications.Send("击杀玩家", "除非你是房间的房主，否则只能在会议之外击杀玩家。");
+				Hydra.notifications.Send("击杀玩家", "只能在会议外向玩家执行击杀，除非你是大厅房主。");
 				return;
 			}
 
@@ -388,25 +427,27 @@ namespace HydraMenu.ui.sections
 
 		private static IEnumerator AttemptFrameForKillingAll(PlayerControl target)
 		{
-			Hydra.Log.LogInfo($"Attempting to frame {target.Data.PlayerName} for killing all players...");
+			Hydra.Log.LogInfo($"尝试栽赃 {target.Data.PlayerName} 击杀所有玩家...");
 
 			bool hasAnticheat = Utilities.IsAnticheatPresent();
 			if(hasAnticheat && !AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("嫁祸者", "你必须是房间的房主才能使用此选项。");
+				Hydra.notifications.Send("栽赃者", "你必须是大厅房主才能使用此选项。");
 				yield break;
 			}
 
 			if(hasAnticheat && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
 			{
-				Hydra.notifications.Send("嫁祸者", "游戏必须已经开始，此选项才能生效。");
+				Hydra.notifications.Send("栽赃者", "游戏必须已开始才能使用此选项。");
 				yield break;
 			}
 
-			Host.DisableGameEnd.Enabled = true;
+			ModuleManager.disableGameEnd.Enabled = true;
 
 			if(target != PlayerControl.LocalPlayer)
 			{
+				// 在官方服务器上，我们无法使用其他玩家的网络 ID 发送 MurderPlayer RPC
+				// 所以我们需要先变身成目标玩家，再亲自击杀所有人
 				Utilities.ShapeshiftPlayer(PlayerControl.LocalPlayer, target, false);
 			}
 
@@ -417,10 +458,11 @@ namespace HydraMenu.ui.sections
 				PlayerControl.LocalPlayer.RpcMurderPlayer(player, true);
 			}
 
+			// 等待三秒，让所有玩家看清我们栽赃的是谁
 			yield return Effects.Wait(3.0f);
 
-			Host.DisableGameEnd.Enabled = false;
-			Hydra.notifications.Send("嫁祸者", $"已嫁祸 {target.Data.PlayerName} 杀光所有玩家！");
+			ModuleManager.disableGameEnd.Enabled = false;
+			Hydra.notifications.Send("栽赃者", $"已将 {target.Data.PlayerName} 栽赃为击杀所有玩家的凶手!");
 		}
 	}
 }

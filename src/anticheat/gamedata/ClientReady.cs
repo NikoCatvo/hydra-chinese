@@ -1,4 +1,4 @@
-﻿using AmongUs.InnerNet.GameDataMessages;
+using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
 using InnerNet;
 
@@ -6,27 +6,27 @@ namespace HydraMenu.anticheat.gamedata
 {
 	internal class ClientReady : GameDataCheck
 	{
-		public override void Validate(MessageReader reader, ref bool blockMessage)
+		public override bool Validate(MessageReader reader)
 		{
 			int clientId = reader.ReadPackedInt32();
 
 			ClientData client = AmongUsClient.Instance.FindClientById(clientId);
 			if(client == null)
 			{
-				Anticheat.Flag($"Recieved ClientReady message for unknown client: {clientId}.");
-				blockMessage = true;
-				return;
+				Anticheat.Flag($"收到未知客户端的 ClientReady 消息: {clientId}。");
+				return false;
 			}
 
 			if(client.IsReady)
 			{
-				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} sent a ClientReady message while already ready.");
-				blockMessage = true;
-				return;
+				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} 在已准备就绪的情况下发送了 ClientReady 消息。");
+				return false;
 			}
+
+			return true;
 		}
 
-		public override GameDataTypes GetGameDataType()
+		public override GameDataTypes GetId()
 		{
 			return GameDataTypes.ReadyFlag;
 		}
