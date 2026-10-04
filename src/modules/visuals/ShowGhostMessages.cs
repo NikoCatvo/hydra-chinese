@@ -1,20 +1,20 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class ShowGhostMessages : Module
 	{
-		public ShowGhostMessages() : base("显示幽灵消息")
+		public ShowGhostMessages() : base("ShowGhostMessages")
 		{
 			base.Enabled = true;
 		}
 
 		private void OnPlayerChat(PlayerControl player, string text)
 		{
-			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null || PlayerControl.LocalPlayer.Data.IsDead || !player.Data.IsDead) return;
+			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null || PlayerControl.LocalPlayer.Data.IsDead || player.Data == null || !player.Data.IsDead) return;
 
-			// 没有快速简单的方法让幽灵的消息在我们存活时显示在聊天中
-			// 我们必须重新实现 ChatController::AddChat 方法并自己构建聊天气泡
+			// There's no quick and easy way to get messages by ghosts to show up in chat if we are still alive
+			// We have to reimplement the ChatController::AddChat method and build the chat bubble ourself
 			ChatController chatController = HudManager.Instance.Chat;
 			ChatBubble bubble = chatController.GetPooledBubble();
 			try

@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class AlwaysVisibleChat : Module
 	{
-		public AlwaysVisibleChat() : base("始终可见聊天")
+		public AlwaysVisibleChat() : base("AlwaysVisibleChat")
 		{
 			base.Enabled = true;
 		}

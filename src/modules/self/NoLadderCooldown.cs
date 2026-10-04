@@ -1,8 +1,8 @@
-namespace HydraMenu.modules.self
+﻿namespace HydraMenu.modules.self
 {
 	internal class NoLadderCooldown : Module
 	{
-		public NoLadderCooldown() : base("无梯子冷却")
+		public NoLadderCooldown() : base("NoLadderCooldown")
 		{
 			base.Enabled = true;
 		}

@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using HydraMenu.network;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.routines
 {
 	public class GlitterBomb : Routine
 	{
-		public GlitterBomb() : base("亮片炸弹") { }
+		public GlitterBomb() : base("Glitterbomb") { }
 
 		private readonly float PHANTOM_DELAY = 0.05f;
 		private float timeElapsed = 0.0f;
@@ -27,7 +27,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("亮片炸弹", "你离开了游戏，亮片炸弹已禁用。", 10);
+			Hydra.notifications.Send("闪光弹", "闪光弹已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -35,7 +35,7 @@ namespace HydraMenu.routines
 		{
 			if(target != PlayerControl.LocalPlayer) return;
 
-			Hydra.notifications.Send("亮片炸弹", "你已被击杀，亮片炸弹已禁用。", 10);
+			Hydra.notifications.Send("闪光弹", "闪光弹已关闭，因为你已被击杀。", 10);
 			Enabled = false;
 		}
 
@@ -43,14 +43,14 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null)
 			{
-				Hydra.notifications.Send("亮片炸弹", "此功能必须身处游戏内才能使用。", 10);
+				Hydra.notifications.Send("闪光弹", "你必须处于对局中，该功能才能生效。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(PlayerControl.LocalPlayer.Data.RoleType != AmongUs.GameOptions.RoleTypes.Phantom)
 			{
-				Hydra.notifications.Send("亮片炸弹", "此功能需要你是幻影才能使用。", 10);
+				Hydra.notifications.Send("闪光弹", "你必须是幻影，该功能才能生效。", 10);
 				Enabled = false;
 				return;
 			}

@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using InnerNet;
 
 namespace HydraMenu.modules.protections
 {
 	internal class ForceDTLs : Module
 	{
-		public ForceDTLs() : base("强制DTLS") { }
+		public ForceDTLs() : base("ForceDTLs") { }
 
 		private static ForceDTLs Instance
 		{

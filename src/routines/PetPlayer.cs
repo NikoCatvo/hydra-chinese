@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 using HydraMenu.modules;
 using InnerNet;
 using UnityEngine;
@@ -8,9 +8,9 @@ namespace HydraMenu.routines
 
 	public class PetPlayerRoutine : Routine
 	{
-		public PetPlayerRoutine() : base("宠物玩家") { }
+		public PetPlayerRoutine() : base("PetPlayer") { }
 
-		// 此值不能太低，否则抚摸动画会卡顿且看起来不自然
+		// This can not be too low, otherwise the petting animation will snap and look unpleasant
 		public readonly float PET_DELAY = 0.60f;
 
 		public PlayerControl target;
@@ -27,9 +27,9 @@ namespace HydraMenu.routines
 			Vector2 petPosition = target.transform.position;
 			petPosition.y -= PlayerControl.LocalPlayer.cosmetics.currentPet.yOffset * 2;
 
-			// PlayerPhysics::CoPet 函数调用 PlayerPhysics::CancelPet 函数
-			// 这会将 PlayerControl::moveable 设为 true，允许玩家再次移动
-			// 所以我们只需重新实现必要部分以显示抚摸手并发送 Pet RPC
+			// The PlayerPhysics::CoPet function calls the PlayerPhysics::CancelPet function
+			// which sets PlayerControl::moveable to true, allowing the player to move again
+			// So we just reimplement the necessary parts to get our petting hand to show, and to send the Pet RPC
 			PlayerControl.LocalPlayer.cosmetics.CurrentPet.SetGettingPet(true, petPosition);
 			PlayerControl.LocalPlayer.cosmetics.PettingHand.StartPet(PlayerControl.LocalPlayer.cosmetics.currentPet);
 
@@ -48,7 +48,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("宠物玩家", "你离开了游戏，宠物玩家已禁用。", 10);
+			Hydra.notifications.Send("抚摸玩家", "抚摸玩家已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -56,7 +56,7 @@ namespace HydraMenu.routines
 		{
 			if(client.Character != target) return;
 
-			Hydra.notifications.Send("宠物玩家", "被你抚摸的玩家离开了游戏，宠物玩家已禁用。");
+			Hydra.notifications.Send("抚摸玩家", "抚摸玩家已关闭，因为你抚摸的玩家已离开游戏。");
 			Enabled = false;
 		}
 
@@ -68,8 +68,8 @@ namespace HydraMenu.routines
 				return;
 			}
 
-			// 尝试移动会导致我们的抚摸手跟随移动
-			// 为避免意外行为，我们阻止玩家移动
+			// Attempting to move will result in our petting hand following our movement
+			// To avoid unexpected behavior, we prevent the player from moving
 			PlayerControl.LocalPlayer.moveable = false;
 			PlayerControl.LocalPlayer.NetTransform.body.velocity = Vector2.zero;
 

@@ -1,4 +1,4 @@
-using AmongUs.GameOptions;
+﻿using AmongUs.GameOptions;
 using Hazel;
 using HydraMenu.modules;
 using HydraMenu.network;
@@ -7,9 +7,9 @@ namespace HydraMenu
 {
 	internal class GameOptions
 	{
-		// 如果我们想要在不应用到自己身上的情况下自由修改 IGameOptions，我们需要克隆它
-		// 可能有更好的方法，但我只是将游戏选项序列化为字节数组，再反序列化回 IGameOptions
-		// 这样就能基于我们预先存在的选项得到一个新的 IGameOptions 实例
+		// If we want to freely modify IGameOptions without it applying to ourselves, we will need to clone it
+		// There might be a better way of doing this, but I just serialize the game options into a byte array and serialize it back into IGameOptions
+		// which gives us a new instance of IGameOptions based off our pre-existing options
 		public static IGameOptions CreateCloneOptions(IGameOptions options)
 		{
 			LogicOptions logicOptions = GameManager.Instance.LogicOptions;
@@ -18,19 +18,19 @@ namespace HydraMenu
 			return logicOptions.gameOptionsFactory.FromBytes(byteArray);
 		}
 
-		// 仅向一个特定玩家发送游戏选项更新
+		// Only send the game options update to one specific player
 		public static void SendGameOptionsToClient(IGameOptions options, int targetClientId)
 		{
-			// 在自由模式中，我们必须手动应用游戏选项，因为没有网络层
-			// 自由模式有一些无法更改的设置，例如玩家视野，因此盲人玩家功能在那里无法工作
+			// We have the manually apply game options in Freeplay as there is no networking layer there
+			// Freeplay has some settings that cannot be changed, such as player vision, so the Blind Player feature will not work there
 			if(AmongUsClient.Instance.NetworkMode == NetworkModes.FreePlay && targetClientId == PlayerControl.LocalPlayer.OwnerId)
 			{
 				GameManager.Instance.LogicOptions.SetGameOptions(options);
 				return;
 			}
 
-			// 非常黑客的做法，但确保我们仍然拥有 Shapeshift 速率限制绕过
-			// 如果我们尝试修改自己的游戏选项，这会产生影响我们大厅设置的意外行为
+			// Very hacky way of doing this, but ensure we still have the Shapeshift ratelimit bypass present
+			// If we attempt to modify our game options then this will have the unintended behavior of affecting our lobby settings
 			if(ModuleManager.bypassShapeshiftRatelimits.Enabled) options.SetFloat(FloatOptionNames.ShapeshifterCooldown, 0.0f);
 
 			MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
@@ -50,14 +50,14 @@ namespace HydraMenu
 			{
 				GameLogicComponent component = GameManager.Instance.LogicComponents[i];
 
-				Hydra.Log.LogMessage($"在索引 {i} 处找到组件 {component.GetType()}");
+				Hydra.Log.LogMessage($"Found component {component.GetType()} at index {i}");
 				if(component.GetType() != typeof(LogicOptions)) continue;
 
 				logicIndex = i;
 				break;
 			}
 
-			Hydra.Log.LogMessage($"在索引 {logicIndex} 处找到 LogicOptions");
+			Hydra.Log.LogMessage($"Found LogicOptions at index {logicIndex}");
 			return logicIndex;
 		}
 	}

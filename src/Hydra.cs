@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace HydraMenu;
 
-[BepInPlugin("com.mrd.hydramenu", "Hydra", "2.0.0.0")]
+[BepInPlugin("com.mrd.hydramenu", "Hydra", "2.1.0.0")]
 [BepInProcess("Among Us.exe")]
 internal class Hydra : BasePlugin
 {
@@ -37,13 +37,13 @@ internal class Hydra : BasePlugin
 		}
 		catch
 		{
-			notifications.Send("致命错误", "Harmony 补丁加载失败，你很可能在使用不受支持的版本。请访问 https://github.com/MrDiamond64/Hydra 获取更多信息。", 9999);
+			notifications.Send("致命错误", "Harmony 补丁加载失败，你很可能使用了不受支持的版本。请访问 https://github.com/MrDiamond64/Hydra 获取更多信息。", 9999);
 			throw;
 		}
 
 		config.Initialize();
 
-		Log.LogInfo($"插件 {MyPluginInfo.PLUGIN_GUID} 已加载!");
+		Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} has loaded!");
 	}
 
 	public static void Eject()
@@ -52,8 +52,8 @@ internal class Hydra : BasePlugin
 
 		notifications.ClearNotifications();
 
-		// 有些模块和例程在 OnDisable 方法中包含清理工作，我们需要触发它们
-		foreach(Module module in ModuleManager.moduleList)
+		// Some modules and routines include cleanup in the OnDisable method, which we need to trigger
+		foreach(Module module in modules.moduleList)
 		{
 			module.Enabled = false;
 		}
@@ -77,7 +77,7 @@ internal class Hydra : BasePlugin
 	{
 		public static void Postfix()
 		{
-			Log.LogInfo("添加模组标记");
+			Log.LogInfo("Adding mod stamp");
 			ModManager.Instance.ShowModStamp();
 		}
 	}

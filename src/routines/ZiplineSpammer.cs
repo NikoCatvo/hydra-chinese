@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using HydraMenu.network;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +7,7 @@ namespace HydraMenu.routines
 {
 	internal class ZiplineSpammer : Routine
 	{
-		public ZiplineSpammer() : base("滑索刷屏") { }
+		public ZiplineSpammer() : base("ZiplineSpammer") { }
 
 		public readonly HashSet<int> targets = new HashSet<int>();
 
@@ -54,7 +54,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("滑索刷屏", "你离开了游戏，滑索刷屏已禁用。", 10);
+			Hydra.notifications.Send("滑索刷屏", "滑索刷屏已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -62,14 +62,14 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("滑索刷屏", "游戏开始后滑索刷屏才能使用。", 10);
+				Hydra.notifications.Send("滑索刷屏", "滑索刷屏只能在游戏开始后使用。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(Utilities.GetCurrentMap() != MapNames.Fungle)
 			{
-				Hydra.notifications.Send("滑索刷屏", "滑索刷屏仅可在 Fungle 地图上使用。", 10);
+				Hydra.notifications.Send("滑索刷屏", "滑索刷屏只能在真菌丛林使用。", 10);
 				Enabled = false;
 				return;
 			}

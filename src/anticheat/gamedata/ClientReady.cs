@@ -1,4 +1,4 @@
-using AmongUs.InnerNet.GameDataMessages;
+﻿using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
 using InnerNet;
 
@@ -13,13 +13,13 @@ namespace HydraMenu.anticheat.gamedata
 			ClientData client = AmongUsClient.Instance.FindClientById(clientId);
 			if(client == null)
 			{
-				Anticheat.Flag($"收到未知客户端的 ClientReady 消息: {clientId}。");
+				Anticheat.Flag($"收到来自未知客户端的 ClientReady 消息：{clientId}。");
 				return false;
 			}
 
 			if(client.IsReady)
 			{
-				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} 在已准备就绪的情况下发送了 ClientReady 消息。");
+				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} 已处于就绪状态，却再次发送了 ClientReady 消息。");
 				return false;
 			}
 

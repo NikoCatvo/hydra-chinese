@@ -1,11 +1,11 @@
-using InnerNet;
+﻿using InnerNet;
 using UnityEngine;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class SpectatePlayer : Module
 	{
-		public SpectatePlayer() : base("观战玩家") { }
+		public SpectatePlayer() : base("SpectatePlayer") { }
 
 		public PlayerControl target;
 
@@ -13,13 +13,13 @@ namespace HydraMenu.modules.visuals
 		{
 			if(client.Character != target) return;
 
-			Hydra.notifications.Send("观战玩家", "你观战的玩家离开了游戏，观战功能已禁用。");
+			Hydra.notifications.Send("观战玩家", "你观战的玩家已离开游戏，观战已关闭。");
 			Enabled = false;
 		}
 
 		protected override void OnEnable()
 		{
-			// 以防此模块作为配置一部分被启用
+			// In case this module was enabled as part of the config
 			if(target == null)
 			{
 				_enabled = false;
@@ -36,6 +36,8 @@ namespace HydraMenu.modules.visuals
 
 		protected override void OnDisable()
 		{
+			target = null;
+
 			if(PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.Data != null)
 			{
 				FollowerCamera camera = Camera.main.GetComponent<FollowerCamera>();

@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using HydraMenu.network;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +7,7 @@ namespace HydraMenu.routines
 {
 	internal class VoteSpammer : Routine
 	{
-		public VoteSpammer() : base("投票刷屏") { }
+		public VoteSpammer() : base("VoteSpammer") { }
 
 		public readonly HashSet<int> targets = new HashSet<int>();
 
@@ -46,13 +46,13 @@ namespace HydraMenu.routines
 
 		private void OnMeetingEnd()
 		{
-			Hydra.notifications.Send("投票刷屏", "当前会议已结束，投票刷屏已禁用。");
+			Hydra.notifications.Send("投票刷屏", "投票刷屏已关闭，因为当前会议已结束。");
 			Enabled = false;
 		}
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("投票刷屏", "你离开了游戏，投票刷屏已禁用。");
+			Hydra.notifications.Send("投票刷屏", "投票刷屏已关闭，因为你已离开游戏。");
 			Enabled = false;
 		}
 
@@ -60,14 +60,14 @@ namespace HydraMenu.routines
 		{
 			if(MeetingHud.Instance == null)
 			{
-				Hydra.notifications.Send("投票刷屏", "此功能需要有活跃的会议才能使用。");
+				Hydra.notifications.Send("投票刷屏", "需要有进行中的会议，该功能才能生效。");
 				Enabled = false;
 				return;
 			}
 
 			if(Utilities.IsAnticheatPresent() && !AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("投票刷屏", "投票刷屏仅可由大厅房主使用。");
+				Hydra.notifications.Send("投票刷屏", "投票刷屏仅限房间房主使用。");
 				Enabled = false;
 				return;
 			}

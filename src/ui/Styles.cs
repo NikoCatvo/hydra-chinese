@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace HydraMenu.ui
@@ -44,9 +44,9 @@ namespace HydraMenu.ui
 				style.normal.textColor = Color.white;
 				style.alignment = TextAnchor.UpperCenter;
 				style.padding.top = 5;
-				// 字体大小与 UI 缩放的乘积会产生带小数的浮点值
-				// 强制转为 int 时会被截断
-				// 但这无关紧要，因为字体大小最多只相差 1 单位
+				// The product of the font size and the UI scale will result in a float value with decimal values
+				// which would get truncated if we cast this into an int
+				// however this is rather insignificant as the font size would be at most one unit off
 				style.fontSize = (int)(13 * MainUI.scale);
 
 				return style;
@@ -140,7 +140,7 @@ namespace HydraMenu.ui
 			CachedTextures.TryGetValue(textureName, out Texture2D background);
 			if(background != null) return background;
 
-			Hydra.Log.LogInfo($"纹理 {textureName} 缓存未命中，正在创建所需纹理...");
+			Hydra.Log.LogInfo($"Cache lookup for texture {textureName} returned a miss, creating the required texture...");
 
 			background = new Texture2D(1, 1);
 			background.SetPixel(0, 0, color.SetAlpha(opacity));

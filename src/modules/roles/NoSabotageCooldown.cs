@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.roles
 {
 	internal class NoSabotageCooldown : Module
 	{
-		public NoSabotageCooldown() : base("无破坏冷却")
+		public NoSabotageCooldown() : base("NoSabotageCooldown")
 		{
 			base.Enabled = true;
 		}
@@ -26,8 +26,8 @@ namespace HydraMenu.modules.roles
 			}
 		}
 
-		// SabotageSystemType 有检查以确保破坏不在冷却中
-		// 要绕过此限制，我们需要强制调用破坏
+		// The SabotageSystemType has checks to ensure that sabotages are not on cooldown
+		// To bypass this we need to forcefully call the sabotage
 		[HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.RpcUpdateSystem), [ typeof(SystemTypes), typeof(byte) ])]
 		class ForceSabotage
 		{

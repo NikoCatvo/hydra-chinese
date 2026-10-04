@@ -1,13 +1,11 @@
-using AmongUs.Data;
-using AmongUs.InnerNet.GameDataMessages;
+﻿using AmongUs.Data;
 using HarmonyLib;
-using Hazel;
 
 namespace HydraMenu.modules.spoofer
 {
 	internal class SpoofLevel : Module
 	{
-		public SpoofLevel() : base("伪装等级") { }
+		public SpoofLevel() : base("SpoofLevel") { }
 
 		public uint SpoofedLevel { get; set; } = 200;
 
@@ -16,18 +14,14 @@ namespace HydraMenu.modules.spoofer
 			get { return ModuleManager.spoofLevel; }
 		}
 
-		// PlayerControl::RpcSetLevel 在 PlayerControl::Start 中被内联，所以我们无法直接打补丁该函数
-		[HarmonyPatch(typeof(RpcSetLevelMessage), nameof(RpcSetLevelMessage.SerializeRpcValues))]
-		class SerializeLevel
+		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetLevel))]
+		class SetLevel
 		{
-			static bool Prefix(MessageWriter msg)
+			static void Prefix(ref uint level)
 			{
-				if(!Instance.Enabled) return true;
-				uint level = Instance.SpoofedLevel - 1;
+				if(!Instance.Enabled) return;
 
-				msg.WritePacked(level);
-				PlayerControl.LocalPlayer.SetLevel(level);
-				return false;
+				level = Instance.SpoofedLevel - 1;
 			}
 		}
 

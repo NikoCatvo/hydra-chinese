@@ -1,26 +1,26 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.self
 {
 	internal class Immortality : Module
 	{
-		// PlayerControl::CheckMurder 函数是 CheckMurder RPC 的处理程序。当大厅房主接收到此 RPC 时，它首先检查
-		// 尝试击杀的玩家是否为内鬼且存活，然后检查被击杀的玩家是否存活、不在通风管道中、不在梯子或平台上
-		// 如果一切顺利，带有 Succeeded 标志的 MurderPlayer RPC 会发送给所有在线玩家，玩家被击杀
-		// 如果上述检查任一失败，则发送带有 FailedError 标志的 MurderPlayer RPC，玩家不会被击杀
-		// 我们可以通过让房主以为我们在通风管道中，来将其作为不死之身漏洞利用
-		// 理论上，我们可以向房主发送一个包含 EnterVent RPC 的 GameDataTo 消息，让房主以为我们在通风管道中
-		// 但对游戏中的其他所有玩家来说，我们仍然会显示为正在移动
-		// 最大的问题是 CheckMurder RPC 是服务器权威的，而非房主权威的，这意味着我们在 PlayerControl::CheckMurder 函数中看到的检查，在后端 Among Us 服务器处理 CheckMurder RPC 时可能并不适用
-		// 后端 Among Us 服务器确实会检查被击杀玩家是否在通风管道中，但不是通过 EnterVent 或 ExitVent RPC！
-		// 相反，它们通过 ShipStatus 网络对象中的 VentilationSystem 系统来检查玩家是否在通风管道中
-		// 当你的 Among Us 客户端进入通风管道时，你首先发送一个 EnterVent RPC，让你的玩家走向通风管道并进入，然后你的客户端发送一个 UpdateSystem RPC
-		// 针对通风系统，操作为 Enter，这会告诉玩家你在通风管道中
-		// 此功能用于通风管道清理功能，以确定哪些玩家应该被踢出通风管道
-		// 但后端 Among Us 服务器在处理 CheckMurder RPC 时也用它来判断玩家是否在通风管道中
-		// 所以当后端 Among Us 服务器收到 CheckMurder RPC 时，它会遍历给定大厅存在的所有网络对象列表，找到 ShipStatus，获取 VentilationSystem 的数据，并通过它判断玩家是否在通风管道中
-		// 这里的服务器权威实际上对我们有帮助，因为我们之前的不死之身理论只会在房主眼中让我们不死，而这会让我们对所有在线玩家可见
-		public Immortality() : base("不死之身") { }
+		// The PlayerControl::CheckMurder function is the handler for CheckMurder RPCs. When the host of the lobby receives this RPC, it first checks
+		// to make sure that the player who attempted to kill is an imposter and is alive, and then checks if the player who should be killed is alive, is not inside a vent, and is not on a ladder or platform
+		// If everything goes smoothly, a MurderPlayer RPC with flag Succeeded is sent to all online players and the player killed
+		// If one of the above checks fails, then a MurderPlayer RPC with flag FailedError is sent and the player is not killed
+		// We can potentially use this as an immortality exploit by making the host think we are inside a vent
+		// In theory, we should be able to send a GameDataTo message to the host with an EnterVent RPC which will make the host think we are inside a vent
+		// but to every other player in the game we will still appear to be moving around
+		// The biggest problem with this is that the CheckMurder RPC is server-authoritative, not host-authoritative, meaning that the checks we see in the PlayerControl::CheckMurder function may not actually be the case when the backend Among Us servers handle the CheckMurder RPC
+		// The backend Among Us servers do check if the player who should be killed is inside a vent, but not through the EnterVent or ExitVent RPCs!
+		// Instead they check if a player is inside a vent through the VentilationSystem system in the ShipStatus net object
+		// When your Among Us client enters a vent, you first send an EnterVent RPC which makes your player walk towards a vent and then go inside a vent, and then your client sends an UpdateSystem RPC
+		// for the ventilation system with an operation of Enter, which tells players that you are inside of a vent
+		// This feature is used for the vent-cleaning feature to determine which players should be kicked out of a vent
+		// but it also used by the backend Among Us servers to determine if a player is inside a vent when handling CheckMurder RPCs
+		// So when the backend Among Us servers receives a CheckMurder RPC, it goes through a list of all net objects that exist for the given lobby, finds ShipStatus, gets the data for the VentilationSystem, and determines if a player is inside of a vent through there
+		// Server authority here is actually helpful for us as our previous theory for immortality would make us immortal in the eyes of the host, meanwhile this will make us visible for all online players
+		public Immortality() : base("Immortality") { }
 
 		private static readonly int CUSTOM_VENT_ID = 50;
 
@@ -36,10 +36,10 @@ namespace HydraMenu.modules.self
 			{
 				if(Instance.Enabled && ventId != CUSTOM_VENT_ID && (op == VentilationSystem.Operation.Enter || op == VentilationSystem.Operation.Exit || op == VentilationSystem.Operation.Move))
 				{
-					// Hydra.Log.LogInfo($"我们的客户端对通风管道 {ventId} 发送了通风系统操作 {op}，正在重新发送不死之身 RPC");
+					// Hydra.Log.LogInfo($"Our client send VentilationSystem operation {op} for vent {ventId}. Resending Immortality RPC");
 					// VentilationSystem.Update(VentilationSystem.Operation.Enter, CUSTOM_VENT_ID);
 
-					Hydra.Log.LogInfo($"我们的客户端对通风管道 {ventId} 发送了通风系统操作 {op}，正在取消..");
+					Hydra.Log.LogInfo($"Our client sent VentilationSystem operation {op} for vent {ventId}, cancelling..");
 					return false;
 				}
 
@@ -49,7 +49,7 @@ namespace HydraMenu.modules.self
 
 		private void OnGameLoad()
 		{
-			Hydra.Log.LogMessage($"新的 ShipStatus 实例已生成，发送不死之身 RPC");
+			Hydra.Log.LogMessage($"A new instance of ShipStatus has spawned, sending the immortality RPC");
 			VentilationSystem.Update(VentilationSystem.Operation.Enter, CUSTOM_VENT_ID);
 		}
 
@@ -57,14 +57,14 @@ namespace HydraMenu.modules.self
 		{
 			if(victim != PlayerControl.LocalPlayer) return;
 
-			Hydra.notifications.Send("不死之身", $"{murderer.Data.PlayerName} 试图击杀你!", 5);
+			Hydra.notifications.Send("无敌", $"{murderer.Data.PlayerName} 试图击杀你！", 5);
 		}
 
 		private void OnMeetingEnd()
 		{
 			if(PlayerControl.LocalPlayer.Data.IsDead) return;
 
-			Hydra.Log.LogInfo("会议已结束，重新发送不死之身 RPC 以保持不死状态");
+			Hydra.Log.LogInfo("Meeting has ended, resending Immortality RPC to retain immortal status");
 			VentilationSystem.Update(VentilationSystem.Operation.Enter, CUSTOM_VENT_ID);
 		}
 
@@ -76,7 +76,7 @@ namespace HydraMenu.modules.self
 
 			if(PlayerControl.LocalPlayer != null)
 			{
-				Hydra.Log.LogInfo("不死之身已启用，发送进入操作的通风系统更新");
+				Hydra.Log.LogInfo("Immortality was enabled, sending a VentilationSystem update with operation Enter");
 				VentilationSystem.Update(VentilationSystem.Operation.Enter, CUSTOM_VENT_ID);
 			}
 		}
@@ -89,7 +89,7 @@ namespace HydraMenu.modules.self
 
 			if(PlayerControl.LocalPlayer != null)
 			{
-				Hydra.Log.LogInfo("不死之身已禁用，发送退出操作的通风系统更新");
+				Hydra.Log.LogInfo("Immortality was disabled, sending a VentilationSystem update with operation Exit");
 				VentilationSystem.Update(VentilationSystem.Operation.Exit, CUSTOM_VENT_ID);
 			}
 		}

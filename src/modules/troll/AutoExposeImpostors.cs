@@ -1,28 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace HydraMenu.modules.troll
 {
 	internal class AutoExposeImpostors : Module
 	{
-		public AutoExposeImpostors() : base("自动曝光内鬼") { }
+		public AutoExposeImpostors() : base("AutoExposeImpostors") { }
 
 		public readonly float MIN_KILL_DISTANCE = 1.0f;
 		public readonly float MAX_DISTANCE = 5.0f;
 
 		public bool ExposeOnMurder { get; set; } = true;
 		public bool ExposeOnShapeshift { get; set; } = true;
-		// 仅在消失时触发，而非重现时
-		// 重现动画短得多，所以一旦所有人被传送，他们可能注意不到气泡
+		// Only triggers on vanish and not unvanish
+		// The unvanish animation is much shorter so once everyone gets teleported they might not notice the cloud
 		public bool ExposeOnPhantom { get; set; } = true;
 
 		private void OnPlayerMurder(PlayerControl murderer, PlayerControl target, MurderResultFlags flags)
 		{
-			if(!ExposeOnMurder || ShipStatus.Instance == null || !flags.HasFlag(MurderResultFlags.Succeeded) || Sabotage.IsSabotageActive(SystemTypes.Electrical)) return;
+			if(!ExposeOnMurder || ShipStatus.Instance == null || !flags.HasFlag(MurderResultFlags.Succeeded) || Sabotage.IsSabotageActive(SystemTypes.Electrical) || murderer.shapeshiftTargetPlayerId != -1) return;
 
 			Vent selectedVent = FindClosestVent(murderer, MIN_KILL_DISTANCE, MAX_DISTANCE);
 			if(selectedVent == null)
 			{
-				Hydra.Log.LogMessage("未找到可用的通风管道用于传送玩家");
+				Hydra.Log.LogMessage("Found no applicable vents to teleport player to");
 				return;
 			}
 
@@ -41,7 +41,7 @@ namespace HydraMenu.modules.troll
 			Vent selectedVent = FindClosestVent(shapeshifter, MIN_KILL_DISTANCE, MAX_DISTANCE);
 			if(selectedVent == null)
 			{
-				Hydra.Log.LogMessage("未找到可用的通风管道用于传送玩家");
+				Hydra.Log.LogMessage("Found no applicable vents to teleport player to");
 				return;
 			}
 
@@ -55,12 +55,12 @@ namespace HydraMenu.modules.troll
 
 		private void OnPlayerPhantom(PlayerControl phantom)
 		{
-			if(!ExposeOnPhantom || ShipStatus.Instance == null || Sabotage.IsSabotageActive(SystemTypes.Electrical)) return;
+			if(!ExposeOnPhantom || ShipStatus.Instance == null || Sabotage.IsSabotageActive(SystemTypes.Electrical) || phantom.shapeshiftTargetPlayerId != -1) return;
 
 			Vent selectedVent = FindClosestVent(phantom, 0.0f, MAX_DISTANCE);
 			if(selectedVent == null)
 			{
-				Hydra.Log.LogMessage("未找到可用的通风管道用于传送玩家");
+				Hydra.Log.LogMessage("Found no applicable vents to teleport player to");
 				return;
 			}
 
@@ -76,14 +76,14 @@ namespace HydraMenu.modules.troll
 		{
 			foreach(Vent vent in ShipStatus.Instance.AllVents) {
 				float distance = Vector2.Distance(player.transform.position, vent.transform.position);
-				Hydra.Log.LogMessage($"通风管道 ID {vent.Id} 的距离为 {distance}");
+				Hydra.Log.LogMessage($"Vent ID {vent.Id} has a distance of {distance}");
 
-				// 如果击杀离通风管道太远，传送的玩家将无法看到击杀
-				// 如果击杀太近，玩家将无法在堆叠中确定是谁击杀了
+				// If the kill is too far away from the vent, then the teleported players will not be able to see the kill
+				// If the kill is too close, then players will not be able to determine who killed in the stack
 				if(distance < minDistance || distance > maxDistance) continue;
 
-				// 我们还想确保没有物体会阻挡传送玩家对击杀的视线
-				// 不完美，因为很多物体允许你看穿它们
+				// We also want to make sure that there isn't an object that would block the teleported player's view to the kill
+				// Not perfect, as a lot of objects allow you to see through them
 				if(PhysicsHelpers.AnythingBetween(player.Collider, player.Collider.bounds.center, vent.transform.position, Constants.ShipOnlyMask, false)) continue;
 
 				return vent;

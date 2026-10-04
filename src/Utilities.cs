@@ -1,11 +1,10 @@
-using AmongUs.GameOptions;
+﻿using AmongUs.GameOptions;
 using Hazel;
 using HydraMenu.network;
 using InnerNet;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static HydraMenu.network.Constants;
 
 namespace HydraMenu
 {
@@ -17,6 +16,8 @@ namespace HydraMenu
 		private static readonly Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<PetData> allPets = HatManager.Instance.allPets;
 		private static readonly Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<NamePlateData> allNameplates = HatManager.Instance.allNamePlates;
 
+		private static readonly System.Random rnd = new System.Random();
+
 		public static int GetRandomUnusedColor()
 		{
 			List<int> colors = Enumerable.Range(0, 18).ToList();
@@ -26,18 +27,14 @@ namespace HydraMenu
 				colors.Remove(player.Data.DefaultOutfit.ColorId);
 			}
 
-			System.Random rnd = new System.Random();
-
-			// 一些模组大厅可能有超过18名玩家，这意味着没有足够的独特颜色供每个人使用
-			// 因此我们应该考虑到这种边缘情况
+			// Some modded lobbies may have more than 18 players, which means there will not be enough unique colors for everyone
+			// so we should take that edge case into account
 			return colors.Count != 0 ? colors[rnd.Next(0, colors.Count)] : rnd.Next(0, 18);
 		}
 
-		public static void RandomizePlayer(bool ingame = false)
+		public static void RandomizePlayer(bool inGame = false)
 		{
-			System.Random rnd = new System.Random();
-
-			if(ingame)
+			if(inGame)
 			{
 				PlayerControl.LocalPlayer.CmdCheckColor((byte)GetRandomUnusedColor());
 
@@ -60,16 +57,15 @@ namespace HydraMenu
 
 		public static PlayerControl GetRandomPlayer(bool excludeHost = false, bool excludeDead = false, bool excludeImposters = false, bool excludeSelf = true)
 		{
-			Il2CppSystem.Collections.Generic.List<PlayerControl> allPlayers = PlayerControl.AllPlayerControls;
 			List<PlayerControl> validPlayers = new List<PlayerControl>();
 
-			foreach(PlayerControl player in allPlayers)
+			foreach(PlayerControl player in PlayerControl.AllPlayerControls)
 			{
 				if(
 					(excludeSelf && AmongUsClient.Instance.ClientId == player.OwnerId) ||
 					(excludeHost && AmongUsClient.Instance.HostId == player.OwnerId) ||
 					(excludeDead && player.Data.IsDead) ||
-					(excludeImposters && player.Data.Role.CanUseKillButton)
+					(excludeImposters && RoleManager.IsImpostorRole(player.Data.RoleType))
 				) continue;
 
 				validPlayers.Add(player);
@@ -77,7 +73,6 @@ namespace HydraMenu
 
 			if(validPlayers.Count == 0) return null;
 
-			System.Random rnd = new System.Random();
 			return validPlayers[rnd.Next(validPlayers.Count)];
 		}
 
@@ -89,7 +84,7 @@ namespace HydraMenu
 
 			BatchedMessage batch = new BatchedMessage();
 
-			// 在服务器权威的大厅中，我们无法更改自己玩家的名字，即使作为房主也不行
+			// We cannot change the name of our player in server-authoritative lobbies, even as the host
 			if(!hasAnticheat)
 			{
 				batch.QueueSetName(PlayerControl.LocalPlayer, outfit.PlayerName);
@@ -100,34 +95,34 @@ namespace HydraMenu
 				batch.QueueSetColor(PlayerControl.LocalPlayer, (byte)outfit.ColorId);
 			}
 
-			batch.QueueSetNameplateStr(PlayerControl.LocalPlayer, outfit.NamePlateId, ++outfit.NamePlateSequenceId);
-			batch.QueueSetHatStr(PlayerControl.LocalPlayer, outfit.HatId, ++outfit.HatSequenceId);
-			batch.QueueSetVisorStr(PlayerControl.LocalPlayer, outfit.VisorId, ++outfit.VisorSequenceId);
-			batch.QueueSetSkinStr(PlayerControl.LocalPlayer, outfit.SkinId, ++outfit.SkinSequenceId);
-			batch.QueueSetPetStr(PlayerControl.LocalPlayer, outfit.PetId, ++outfit.PetSequenceId);
+			batch.QueueSetNameplateStr(PlayerControl.LocalPlayer, outfit.NamePlateId);
+			batch.QueueSetHatStr(PlayerControl.LocalPlayer, outfit.HatId);
+			batch.QueueSetVisorStr(PlayerControl.LocalPlayer, outfit.VisorId);
+			batch.QueueSetSkinStr(PlayerControl.LocalPlayer, outfit.SkinId);
+			batch.QueueSetPetStr(PlayerControl.LocalPlayer, outfit.PetId);
 
 			batch.FinishBatch();
 		}
 
 		public static void AttemptStartMeeting(PlayerControl reporter, NetworkedPlayerInfo target)
 		{
-			Hydra.Log.LogInfo($"尝试为 {reporter.Data.PlayerName} 召开会议");
+			Hydra.Log.LogInfo($"Attempting to start a meeting for {reporter.Data.PlayerName}");
 
 			bool hasAnticheat = IsAnticheatPresent();
 
 			if(hasAnticheat && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
 			{
-				Hydra.notifications.Send("召开会议", "游戏必须已开始，此功能才能生效。");
+				Hydra.notifications.Send("召开会议", "游戏必须开始后才能使用此功能。");
 				return;
 			}
 
 			if(AmongUsClient.Instance.AmHost)
 			{
-				Hydra.Log.LogInfo($"我们是房主，可以直接使用 StartMeeting RPC");
+				Hydra.Log.LogInfo($"We are the host so we can directly use the StartMeeting RPC");
 
 				if(ShipStatus.Instance == null)
 				{
-					Hydra.notifications.Send("召开会议", "必须存在有效的 ShipStatus 实例才能使用此功能。");
+					Hydra.notifications.Send("召开会议", "需要存在有效的 ShipStatus 实例，该功能才能生效。");
 				}
 				else
 				{
@@ -137,17 +132,17 @@ namespace HydraMenu
 				return;
 			}
 
-			Hydra.Log.LogInfo("我们不是房主，必须使用 ReportDeadBody RPC");
+			Hydra.Log.LogInfo("We are not the host so we have to use the ReportDeadBody RPC");
 
 			if(hasAnticheat && reporter != PlayerControl.LocalPlayer)
 			{
-				Hydra.notifications.Send("召开会议", "你必须是大厅房主才能让另一名玩家召开会议。");
+				Hydra.notifications.Send("召开会议", "你必须先成为房间房主，才能让其他玩家召开会议。");
 				return;
 			}
 
 			if(reporter.Data.IsDead)
 			{
-				Hydra.notifications.Send("召开会议", "只有存活时才能召集会议或报告尸体。");
+				Hydra.notifications.Send("召开会议", "只有存活时才能召开会议或报告尸体。");
 				return;
 			}
 
@@ -155,13 +150,13 @@ namespace HydraMenu
 			{
 				if(!target.IsDead)
 				{
-					Hydra.notifications.Send("召开会议", "只能报告本轮游戏中已死亡玩家的尸体。");
+					Hydra.notifications.Send("召开会议", "只能报告本回合中已死亡玩家的尸体。");
 					return;
 				}
 
 				if(!DoesDeadBodyExist(target.PlayerId))
 				{
-					Hydra.notifications.Send("召开会议", "找不到该玩家的尸体，只能报告本轮已死亡且尸体未消失的玩家。");
+					Hydra.notifications.Send("召开会议", "未能找到该玩家的尸体。只有当玩家在本回合死亡且尸体尚未消失时，才能报告其尸体。");
 					return;
 				}
 			}
@@ -198,27 +193,27 @@ namespace HydraMenu
 
 			if(hasAnticheat && !AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("变身玩家", "你必须是大厅房主才能使用此功能。");
+				Hydra.notifications.Send("变形玩家", "你需要是房间房主才能使用该功能。");
 				return;
 			}
 
 			if(hasAnticheat && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
 			{
-				Hydra.notifications.Send("变身玩家", "游戏必须已开始才能使用此选项。");
+				Hydra.notifications.Send("变形玩家", "需要游戏已经开始，该选项才能生效。");
 				return;
 			}
 
 			BatchedMessage batch = new BatchedMessage();
 
-			// 原版反作弊会在房主尝试为非 Shapeshifter 角色的玩家发送 Shapeshift RPC 时封禁房主
-			// 为了绕过这一点，我们临时将玩家的角色更改为 Shapeshifter，使其变形，然后将其恢复为之前的角色
+			// The vanilla anticheat will ban the host if they attempt to send the Shapeshift RPC for a player whose role is not Shapeshifter
+			// To get around this, we temporarily change the player's role to Shapeshifter, make them shapeshift, and revert them back to their previous role
 			if(hasAnticheat && victim.Data.RoleType != RoleTypes.Shapeshifter)
 			{
 				RoleTypes currentRole = victim.Data.RoleType;
 
-				// 我们试图陷害的客户端不应注意到任何变化，因为在角色选择期间 SetRole RPC 是以 canOverrideRole 选项设为 false 发送的
-				// 这意味着任何未来的 SetRole RPC 都将被忽略，除非新角色是幽灵角色
-				// 以防将来此机制被更改，我们可以将 SetRole RPC 广播给一个垃圾客户端 ID 而不是所有人，以避免客户端知道他们成为了 Shapeshifter
+				// The client that we're attempting to frame shouldn't notice anything as during role selection the SetRole RPC is sent with the canOverrideRole option set to false
+				// meaning any future SetRole RPCs will be ignored unless the new role is a ghost role
+				// Just in case this ever gets changed in the future, we could broadcast the SetRole RPC to a junk client ID instead of everyone to avoid the client knowing they became a Shapeshifter
 				batch.QueueSetRole(victim, RoleTypes.Shapeshifter, true);
 				batch.QueueShapeshift(victim, target, shouldAnimate);
 				batch.QueueSetRole(victim, currentRole, true);
@@ -233,10 +228,10 @@ namespace HydraMenu
 
 		public static MapNames GetCurrentMap()
 		{
-			// 如果 Among Us 尚未完全加载，则默认返回 The Skeld
+			// If Among Us has not fully loaded in yet then default to The Skeld
 			if(AmongUsClient.Instance == null) return MapNames.Skeld;
 
-			// 如果 ShipStatus 不存在，则根据游戏选项回退到当前地图
+			// Fall back to current map according to game options if ShipStatus does not exist
 			if(ShipStatus.Instance == null)
 			{
 				if(AmongUsClient.Instance.NetworkMode == NetworkModes.FreePlay)
@@ -265,10 +260,10 @@ namespace HydraMenu
 		{
 			if(Constants.IsVersionModded() || PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null) return false;
 
-			// 在 Freeplay、本地和模组大厅中，NetworkedPlayerInfo 网络对象由房主拥有 (-2)
-			// 在原版大厅中，NetworkedPlayerInfo 网络对象由 Among Us 后端服务器拥有 (-4)
-			// 如果我们的 NetworkedPlayerInfo 网络对象由房主拥有，我们可以假设该大厅具有宽松的反作弊机制，没有服务器权威
-			// 因此不需要我们使用任何绕过手段
+			// On Freeplay, local, and modded lobbies, NetworkedPlayerInfo net objects are owned by the host (-2)
+			// On vanilla lobbies, NetworkedPlayerInfo net objects are owned by the backend among us servers (-4)
+			// If our NetworkedPlayerInfo net object is owned by the host, we can assume that the lobby has a lax anticheat without server authority
+			// which does not require us to use any sort of bypasses
 			return PlayerControl.LocalPlayer.Data.OwnerId != (int)OwnerIds.Host;
 		}
 
@@ -284,16 +279,16 @@ namespace HydraMenu
 			return player.GetPlayerColorString();
 		}
 
-		// 这种踢出方法允许非大厅房主的玩家通过让对方触发 Among Us 反作弊来将其踢出大厅
-		// 有多种 RPC 只能由大厅房主发送，例如 MurderPlayer、Shapeshift、ProtectPlayer 等
-		// 这些 RPC 由房主作为对其客户端权威等价物的响应发送，例如 CheckMurder、CheckShapeshift、CheckProtect 等
-		// 如果我们能让某个玩家在不作为大厅房主的情况下发送仅限房主的 RPC，我们就能让反作弊将其踢出大厅
-		// 大多数 RPC 处理程序都有检查以确保客户端是大厅房主，正是为了避免这种利用
-		// 然而通风系统的 UpdateSystem RPC 是一个例外
-		// 发送操作为 StartCleaning 或 BootFromVent 的通风系统更新会导致房主发送 BootFromVent RPC，这正是这些仅限房主的 RPC 之一
-		// 然而在从 ShipStatus::UpdateSystem 到 PlayerPhysics::RpcBootFromVent 的调用栈中，没有任何地方检查当前客户端是否是大厅房主
-		// 如果你将此系统更新发送给房主以外的人，他们将发送 BootFromVent RPC 并被 Among Us 反作弊踢出
-		// 根据我的经验，即使我不是大厅房主，这也非常有用，可以踢出那些公然作弊、召开无用会议或造成其他破坏的玩家
+		// This kick method allows a player who is not the host of the lobby to kick someone out of the lobby by making them trigger the Among Us Anticheat
+		// There are various RPCs that can only be sent by the host of the lobby, such as MurderPlayer, Shapeshift, ProtectPlayer, etc
+		// These RPCs are sent by the host in response to their client-authoritative equivalent, such as CheckMurder, CheckShapeshift, CheckProtect, etc
+		// If we are able to make a player send a host-only RPC without being the host of the lobby, we can make the anticheat kick them out of the lobby
+		// Most RPC handlers have checks to ensure that the client is the host of the lobby to avoid exactly this exploit
+		// however one exception is UpdateSystem RPC for Ventilation System
+		// Sending a ventilation system update with an operation of StartCleaning or BootFromVent will result in the host sending a BootFromVent RPC, which is one of these host-only RPCs
+		// however nowhere in the callstack from ShipStatus::UpdateSystem to PlayerPhysics::RpcBootFromVent is there a check to ensure that the current client is the host of the lobby
+		// If you were to send this system update to someone other than the host, they will send the BootFromVent RPC and get kicked by the Among Us anticheat
+		// In my experience this has been incredibly useful to kick out players who are blatantly hacking, calling useless meetings, or causing other mischief even if I am not the host if the lobby
 		public static void KickPlayer(PlayerControl player, bool skipFirstStage = false)
 		{
 			if(AmongUsClient.Instance.AmHost)
@@ -305,19 +300,19 @@ namespace HydraMenu
 
 			if(player.OwnerId == AmongUsClient.Instance.HostId)
 			{
-				Hydra.notifications.Send("踢出玩家", "你不能踢出大厅的房主。");
+				Hydra.notifications.Send("踢出玩家", "你无法踢出房间房主。");
 				return;
 			}
 
 			if(ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("踢出玩家", "游戏必须已开始才能使用此功能。");
+				Hydra.notifications.Send("踢出玩家", "需要游戏已经开始，该功能才能生效。");
 				return;
 			}
 
 			if(!IsAnticheatPresent())
 			{
-				Hydra.notifications.Send("踢出玩家", "此功能仅在服务器权威的大厅中有效。");
+				Hydra.notifications.Send("踢出玩家", "该功能仅在服务器权威的房间中有效。");
 				return;
 			}
 
@@ -325,9 +320,9 @@ namespace HydraMenu
 
 			if(!skipFirstStage)
 			{
-				Hydra.Log.LogInfo($"向 {player.OwnerId} 发送进入通风系统更新");
+				Hydra.Log.LogInfo($"Sending Enter ventilation system update to {player.OwnerId}");
 
-				MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
+				MessageWriter writer = MessageWriter.Get(SendOption.None);
 				writer.Write((ushort)0);
 				writer.Write((byte)VentilationSystem.Operation.Enter);
 				writer.Write((byte)0);
@@ -336,9 +331,9 @@ namespace HydraMenu
 				writer.Recycle();
 			}
 
-			Hydra.Log.LogInfo($"向 {player.OwnerId} 发送踢出内鬼通风系统更新");
+			Hydra.Log.LogInfo($"Sending BootImposters ventilation system update to {player.OwnerId}");
 
-			MessageWriter writer2 = MessageWriter.Get(SendOption.Reliable);
+			MessageWriter writer2 = MessageWriter.Get(SendOption.None);
 			writer2.Write((ushort)1);
 			writer2.Write((byte)VentilationSystem.Operation.BootImpostors);
 			writer2.Write((byte)0);

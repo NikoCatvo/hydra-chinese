@@ -1,8 +1,8 @@
-namespace HydraMenu.modules.self
+﻿namespace HydraMenu.modules.self
 {
 	internal class NoZiplineCooldown : Module
 	{
-		public NoZiplineCooldown() : base("无滑索冷却")
+		public NoZiplineCooldown() : base("NoZiplineCooldown")
 		{
 			base.Enabled = true;
 		}

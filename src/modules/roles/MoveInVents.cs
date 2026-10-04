@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine;
 
 namespace HydraMenu.modules.roles
 {
 	internal class MoveInVents : Module
 	{
-		public MoveInVents() : base("通风管道移动")
+		public MoveInVents() : base("MoveInVents")
 		{
 			base.Enabled = true;
 		}

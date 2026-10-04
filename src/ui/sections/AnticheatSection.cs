@@ -1,4 +1,4 @@
-using HydraMenu.anticheat;
+﻿using HydraMenu.anticheat;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
@@ -11,22 +11,22 @@ namespace HydraMenu.ui.sections
 		{
 			Anticheat.Enabled = GUILayout.Toggle(Anticheat.Enabled, "启用 Hydra 反作弊");
 
-			Anticheat.CheckSpoofedPlatforms = GUILayout.Toggle(Anticheat.CheckSpoofedPlatforms, "标记伪装平台数据");
+			Anticheat.CheckSpoofedPlatforms = GUILayout.Toggle(Anticheat.CheckSpoofedPlatforms, "标记伪造的平台数据");
 
 			GUILayout.Space(5);
-			GUILayout.Label("应由反作弊检查的 RPC:");
+			GUILayout.Label("需要反作弊检查的 RPC：");
 			foreach((RpcCalls rpcCall, RpcCheck handler) in Anticheat.RpcHandlers)
 			{
-				handler.Enabled = GUILayout.Toggle(handler.Enabled, $"{rpcCall}");
+				handler.Enabled = GUILayout.Toggle(handler.Enabled, $"{Lang.Tr(rpcCall)}");
 			}
 
 			GUILayout.Space(5);
-			GUILayout.Label("检测到作弊者时:");
+			GUILayout.Label("检测到作弊者时：");
 			Anticheat.sendNotification = GUILayout.Toggle(Anticheat.sendNotification, "发送通知");
 			Anticheat.discardRpc = GUILayout.Toggle(Anticheat.discardRpc, "丢弃 RPC");
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label($"惩罚玩家: {Anticheat.punishment}");
+			GUILayout.Label($"惩罚玩家方式：{Lang.Tr(Anticheat.punishment)}");
 			Anticheat.punishment = (Anticheat.Punishments)GUILayout.HorizontalSlider((float)Anticheat.punishment, 0, 3);
 			GUILayout.EndHorizontal();
 		}

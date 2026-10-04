@@ -2,7 +2,7 @@ namespace HydraMenu.modules.visuals
 {
 	internal class Fullbright : Module
 	{
-		public Fullbright() : base("全亮") { }
+		public Fullbright() : base("Fullbright") { }
 
 		private void OnGameLoad()
 		{

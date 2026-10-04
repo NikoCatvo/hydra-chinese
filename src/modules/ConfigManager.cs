@@ -1,4 +1,4 @@
-using BepInEx;
+﻿using BepInEx;
 using HydraMenu.anticheat;
 using HydraMenu.ui;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace HydraMenu.modules
 		{
 			if(!Directory.Exists(CONFIG_PATH))
 			{
-				Hydra.Log.LogInfo("未找到配置文件夹，正在创建...");
+				Hydra.Log.LogInfo("No config folder was found, creating...");
 				Directory.CreateDirectory(CONFIG_PATH);
 
 				configList.Add(currentConfig);
@@ -36,14 +36,14 @@ namespace HydraMenu.modules
 			}
 
 			string[] configFiles = Directory.GetFiles(CONFIG_PATH, "*.json");
-			Hydra.Log.LogInfo($"发现 {configFiles.Length} 个配置文件");
+			Hydra.Log.LogInfo($"Discovered {configFiles.Length} config files");
 
 			foreach(string file in configFiles)
 			{
 				configList.Add(Path.GetFileNameWithoutExtension(file));
 			}
 
-			// 应始终存在名为 "Hydra" 的配置
+			// There should always be a config named "Hydra" present
 			if(!configList.Contains(currentConfig))
 			{
 				configList.Add(currentConfig);
@@ -65,21 +65,21 @@ namespace HydraMenu.modules
 			string configLocation = GetConfigPath(configName);
 			if(!File.Exists(configLocation))
 			{
-				Hydra.Log.LogWarning($"尝试加载配置 {configName}，但不存在此配置");
+				Hydra.Log.LogWarning($"Tried to load config {configName} when no such config exists");
 				// Let's just carry on with our current config
 				return;
 			}
 
 			string configString = File.ReadAllText(configLocation);
 
-			ConfigData configData = null;
+			ConfigData configData;
 			try
 			{
 				configData = JsonSerializer.Deserialize<ConfigData>(configString);
 			}
 			catch
 			{
-				Hydra.Log.LogError($"加载位于 {configLocation} 的配置失败");
+				Hydra.Log.LogError($"Failed to load config at {configLocation}");
 				return;
 			}
 
@@ -89,7 +89,7 @@ namespace HydraMenu.modules
 			Anticheat.LoadConfigData(configData.Anticheat);
 
 			currentConfig = configName;
-			Hydra.Log.LogInfo($"已加载配置 {configName}");
+			Hydra.Log.LogInfo($"Loaded config {configName}");
 		}
 
 		public void SaveConfig(string configName)
@@ -108,7 +108,7 @@ namespace HydraMenu.modules
 			string configString = JsonSerializer.Serialize(configData, serializerOptions);
 			File.WriteAllText(configLocation, configString);
 
-			Hydra.Log.LogInfo($"配置 {configName} 已保存到 {configLocation}");
+			Hydra.Log.LogInfo($"Config {configName} has been saved to {configLocation}");
 		}
 
 		public string GetUnusedConfigName()

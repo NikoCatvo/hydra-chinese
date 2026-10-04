@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using InnerNet;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.routines
 {
 	public class PlayerFollowerRoutine : Routine
 	{
-		public PlayerFollowerRoutine() : base("玩家跟随") { }
+		public PlayerFollowerRoutine() : base("PlayerFollower") { }
 
 		public PlayerControl target;
 
@@ -18,18 +18,18 @@ namespace HydraMenu.routines
 			float distance = Vector3.Distance(target.transform.position, PlayerControl.LocalPlayer.transform.position);
 			if(distance > 2)
 			{
-				Hydra.Log.LogInfo($"我们偏离跟随的玩家太远，传送回原位。距离: {distance}");
+				Hydra.Log.LogInfo($"We drifted too far away from the player we are following, teleporting back to course. Distance: {distance}");
 				Teleporter.TeleportTo(target.transform.position);
 			}
 			*/
 
-			// 我们大概可以看看幽灵附身如何让跟随者走向玩家位置，这样我们就不必直接传送，但现在这样也可以
+			// We could probably see how haunting as a ghost makes the follower walks towards a player's position so we don't have to directly teleport, but this works fine for now
 			PlayerControl.LocalPlayer.transform.position = target.transform.position;
 		}
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("跟随玩家", "你离开了游戏，跟随玩家已禁用。", 10);
+			Hydra.notifications.Send("跟随玩家", "跟随玩家已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -37,7 +37,7 @@ namespace HydraMenu.routines
 		{
 			if(client.Character != target) return;
 
-			Hydra.notifications.Send("跟随玩家", "你跟随的玩家离开了游戏，跟随玩家已禁用。");
+			Hydra.notifications.Send("跟随玩家", "跟随玩家已关闭，因为你跟随的玩家已离开游戏。");
 			Enabled = false;
 		}
 

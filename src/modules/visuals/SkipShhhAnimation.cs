@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class SkipShhhAnimation : Module
 	{
-		public SkipShhhAnimation() : base("跳过嘘动画")
+		public SkipShhhAnimation() : base("SkipShhhAnimation")
 		{
 			base.Enabled = true;
 		}

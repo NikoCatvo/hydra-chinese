@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using UnityEngine;
@@ -36,7 +36,7 @@ namespace HydraMenu.routines
 			}
 		}
 
-		// 返回每个例程及其名称的字典，以及每个属性名称和值的字典
+		// Return a dictionary of each routine with its name, and another dictionary with names and values of each property
 		public Dictionary<string, Dictionary<string, JsonElement>> GetConfigData()
 		{
 			Dictionary<string, Dictionary<string, JsonElement>> routineConfig = new Dictionary<string, Dictionary<string, JsonElement>>();
@@ -56,7 +56,7 @@ namespace HydraMenu.routines
 				int routineIndex = Array.FindIndex(routineList, r => r.name == routineName);
 				if(routineIndex == -1)
 				{
-					Hydra.Log.LogWarning($"配置中存在例程 {routineName} 的条目，但不存在此例程");
+					Hydra.Log.LogWarning($"Config has entry for routine {routineName} when there is no such routine");
 					continue;
 				}
 

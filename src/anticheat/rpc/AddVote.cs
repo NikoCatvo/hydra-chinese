@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 using InnerNet;
 using System;
 
@@ -14,7 +14,7 @@ namespace HydraMenu.anticheat.rpc
 			ClientData client = AmongUsClient.Instance.FindClientById(source);
 			if(client == null || client.Character == null)
 			{
-				Hydra.Log.LogInfo($"未知客户端 ID ({source}) 尝试投票踢出 {target}");
+				Hydra.Log.LogInfo($"An unknown client id ({source}) attempted to votekick {target}");
 				return false;
 			}
 
@@ -22,13 +22,13 @@ namespace HydraMenu.anticheat.rpc
 
 			if(player.Data.IsDead)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 死亡时尝试投票踢出玩家。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在死亡状态下尝试投票踢出玩家。");
 				return false;
 			}
 
 			if(MeetingHud.Instance == null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在会议外尝试投票踢出玩家。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在非会议期间尝试投票踢出玩家。");
 				return false;
 			}
 

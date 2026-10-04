@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.host
 {
 	internal class DisableGameEnd : Module
 	{
-		public DisableGameEnd() : base("禁用游戏结束") { }
+		public DisableGameEnd() : base("DisableGameEnd") { }
 
 		private static DisableGameEnd Instance
 		{

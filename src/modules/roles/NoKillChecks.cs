@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using HydraMenu.network;
 
 namespace HydraMenu.modules.roles
 {
 	internal class NoKillChecks : Module
 	{
-		public NoKillChecks() : base("无击杀检查") { }
+		public NoKillChecks() : base("NoKillChecks") { }
 
 		private static NoKillChecks Instance
 		{
@@ -55,14 +55,14 @@ namespace HydraMenu.modules.roles
 		private static bool IsValidTarget(NetworkedPlayerInfo target)
 		{
 			return target != null &&
-			       target != PlayerControl.LocalPlayer.Data &&
-			       !target.Disconnected &&
-			       (!target.IsDead || Instance.KillGhosts) &&
-			       (!RoleManager.IsImpostorRole(target.RoleType) || Instance.KillOtherImpostors);
+					target != PlayerControl.LocalPlayer.Data &&
+					!target.Disconnected &&
+					(!target.IsDead || Instance.KillGhosts) &&
+					(!RoleManager.IsImpostorRole(target.RoleType) || Instance.KillOtherImpostors);
 		}
 
-		// CheckMurder RPC 处理器有针对击杀幽灵的检查
-		// 所以我们需要直接发送 MurderPlayer RPC 来绕过它
+		// The CheckMurder RPC handler has checks against killing ghosts
+		// so we need to directly send the MurderPlayer RPC to get around it
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))]
 		class KillBypass
 		{
@@ -75,12 +75,12 @@ namespace HydraMenu.modules.roles
 			}
 		}
 
-		// 后端 AU 服务器依赖 CheckVanish 和 CheckAppear RPC 来知道玩家是否已消失
-		// 此信息随后被服务器的 CheckMurder RPC 处理程序用于判断是否应授权击杀
-		// 不知道为什么，但 Innersloth 把 CheckVanish 和 CheckAppear RPC 保护得极严，而 Vanish 和 Appear RPC 几乎零保护
-		// 在大厅中作为非幽灵发送 CheckVanish、已幽灵时、冷却中、或 maxDuration 字段与游戏设置的幽灵持续时间不匹配将导致封禁
-		// 在大厅中作为非幽灵发送 CheckAppear、或未消失时，也会导致被踢出大厅
-		// 但在上述任何条件下发送 Vanish 或 Appear 都会导致 RPC 被中继给其他玩家
+		// The backend AU servers rely on the CheckVanish and CheckAppear RPCs to know if a player has vanished
+		// This information is then used by the server's CheckMurder RPC handler to know if a kill should be authorized
+		// No idea why, but Innersloth has secured the CheckVanish and CheckAppear RPCs to hell the Vanish and Appear RPCs have almost-zero protection
+		// Sending CheckVanish in the lobby, as non-phantom, or while already phantomed, in cooldown, or with the maxDuration field mismatched to the game settings phantom duration will result in a ban
+		// Sending CheckAppear in the lobby, as non-phantom, or while non-vanished, will also result in a kick from the lobby
+		// But sending Vanish or Appear in any of those conditions will result in the RPC being relayed to other players
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckVanish))]
 		class VanishBypass
 		{
@@ -103,7 +103,7 @@ namespace HydraMenu.modules.roles
 				if(!Instance.Enabled || !Instance.KillAsPhantom) return true;
 
 				BatchedMessage batch = new BatchedMessage();
-				batch.QueueAppear(__instance,  shouldAnimate);
+				batch.QueueAppear(__instance, shouldAnimate);
 				batch.FinishBatch();
 				return false;
 			}

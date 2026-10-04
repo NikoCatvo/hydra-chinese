@@ -1,12 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.spoofer
 {
 	internal class SpoofDevice : Module
 	{
-		public SpoofDevice() : base("伪装设备")
+		public SpoofDevice() : base("SpoofDevice")
 		{
-			// 此模块可始终启用
+			// This module can be enabled at all times
 			base.Enabled = true;
 		}
 
@@ -31,7 +31,7 @@ namespace HydraMenu.modules.spoofer
 						break;
 
 					case Platforms.Xbox:
-						// 可在 https://www.cxkes.me/xbox/xuid 找到 Xbox 玩家标签的正确 XUID
+						// You can find the proper XUID for an Xbox gamertag at https://www.cxkes.me/xbox/xuid
 						__instance.PlatformName = "Major Nelson";
 						__instance.XboxPlatformId = 2584878536129841;
 						break;
@@ -46,7 +46,7 @@ namespace HydraMenu.modules.spoofer
 						break;
 
 					default:
-						// 其他平台不发送额外的平台特定数据
+						// Other platforms do not send additional platform specific data
 						__instance.PlatformName = "TESTNAME";
 						__instance.XboxPlatformId = 0;
 						__instance.PsnPlatformId = 0;

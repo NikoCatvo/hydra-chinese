@@ -1,8 +1,9 @@
-using AmongUs.InnerNet.GameDataMessages;
+﻿using AmongUs.InnerNet.GameDataMessages;
 using HarmonyLib;
 using Hazel;
 using HydraMenu.anticheat.gamedata;
 using HydraMenu.anticheat.rpc;
+using HydraMenu.ui;
 using System;
 using System.Collections.Generic;
 
@@ -20,7 +21,7 @@ namespace HydraMenu.anticheat
 
 		public static readonly Dictionary<RpcCalls, RpcCheck> RpcHandlers = new Dictionary<RpcCalls, RpcCheck>()
 		{
-			// 此字典中的 RPC 处理程序应按其 RPC ID 排序
+			// RPC handlers in this dictionary should be sorted by their RPC ID
 			{ RpcCalls.PlayAnimation, new PlayAnimation() },
 			{ RpcCalls.CompleteTask, new CompleteTask() },
 			{ RpcCalls.Exiled, new Exiled() },
@@ -100,14 +101,14 @@ namespace HydraMenu.anticheat
 
 			if(sourceNetObj != rpcCheck.GetExpectedNetObject())
 			{
-				// 收到本应发送给不同网络对象的 RPC，某种漏洞利用尝试？
+				// Received an RPC that should've been sent for a different net object, some sort of exploit attempt?
 				return false;
 			}
 
-			// 只有我们（房主）应该发送仅房主 RPC
+			// Only we, the host, should be sending host-only RPCs
 			if(player != null && AmongUsClient.Instance.AmHost && rpcCheck.IsHostOnly())
 			{
-				Flag(player, $"{player.Data.PlayerName} 非房主却发送了 {rpc} RPC。");
+				Flag(player, $"{player.Data.PlayerName} 在非房主状态下发送了 {Lang.Tr(rpc)} RPC。");
 				return false;
 			}
 
@@ -115,7 +116,7 @@ namespace HydraMenu.anticheat
 
 			bool isValid = rpcCheck.Validate(player, reader);
 
-			// 将读取位置恢复到之前的位置，以免搞乱 HandleRpc 函数或其他补丁
+			// Put the read position back to its previous spot to not mess up the HandleRpc function or other patches
 			reader.Position = oldReadPosition;
 
 			return isValid || !discardRpc;
@@ -130,7 +131,7 @@ namespace HydraMenu.anticheat
 
 			bool isValid = gameDataCheck.Validate(reader);
 
-			// 将读取位置恢复到之前的位置
+			// Put the read position back to its previous spot
 			reader.Position = oldReadPosition;
 
 			return isValid || !discardRpc;
@@ -138,9 +139,9 @@ namespace HydraMenu.anticheat
 
 		public static void Flag(PlayerControl player, string reason, bool shouldPunish = true)
 		{
-			// 理智检查，确保我们没有标记自己
-			// 在没有网络对象冒充检查的服务器上，可能会代表房主发送无效 RPC
-			// 这会导致 Hydra 反作弊标记自己并将自己从自己的大厅封禁
+			// Sanity check, make sure that we are not flagging ourselves
+			// On servers without net object impersonation checks, it may be possible to send an invalid RPC on the behalf of the host
+			// which would result in Hydra Anticheat flagging ourselves and banning us from our own lobby
 			if(player == PlayerControl.LocalPlayer) return;
 
 			if(sendNotification)
@@ -154,7 +155,7 @@ namespace HydraMenu.anticheat
 			}
 		}
 
-		// 如果我们不知道是哪个玩家导致的违规
+		// If we do not know which player caused the violation
 		public static void Flag(string reason)
 		{
 			if(sendNotification)
@@ -172,26 +173,26 @@ namespace HydraMenu.anticheat
 
 				case Punishments.Kick:
 				case Punishments.ErrorKick:
-					Hydra.Log.LogMessage($"{player.Data.PlayerName} 因作弊被 Hydra 反作弊踢出");
+					Hydra.Log.LogMessage($"{player.Data.PlayerName} was kicked by Hydra Anticheat for hacking");
 
-					// 原版反作弊在游戏尚未开始时不允许使用 ErrorKick 方法
+					// The vanilla anticheat prevents using the ErrorKick method if the game has not started yet
 					if(punishment == Punishments.Kick || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
 					{
 						AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
 					}
 					else
 					{
-						// 当游戏开始时，房主会等待约十秒等待所有客户端发送 ClientReady 游戏消息
-						// 如果在计时器结束前房主未收到玩家的 ClientReady 游戏消息，房主会因超时将玩家踢出
-						// 玩家看到的踢出消息会解释其网络连接不佳或设备过旧
-						// 而游戏内其他玩家会看到该玩家因错误离开，而不是被踢出
-						// 除 ClientTimeout 外的任何其他断开连接消息都会导致原版反作弊将我们从大厅踢出
+						// When a game starts, the host waits around ten seconds to wait for all clients to send the ClientReady game message
+						// If the ten-second timer is reached without a ClientReady game message being received by the host, the host will kick the player due to timeout
+						// The kick message shown to the player will explain that the player has a poor internet connection or that their device is too old
+						// and in-game, players will be shown that the player left due to an error instead of being kicked
+						// Any other disconnection messages other than ClientTimeout will result in the vanilla anticheat kicking us from the lobby
 						AmongUsClient.Instance.SendLateRejection(player.OwnerId, DisconnectReasons.ClientTimeout);
 					}
 					break;
 
 				case Punishments.Ban:
-					Hydra.Log.LogMessage($"{player.Data.PlayerName} 因作弊被 Hydra 反作弊自动封禁");
+					Hydra.Log.LogMessage($"{player.Data.PlayerName} was automatically banned by Hydra Anticheat for hacking");
 					AmongUsClient.Instance.KickPlayer(player.OwnerId, true);
 					break;
 			}
@@ -211,7 +212,7 @@ namespace HydraMenu.anticheat
 			{
 				AcEnabled = Enabled,
 				SendNotification = sendNotification,
-				DiscardRpc =  discardRpc,
+				DiscardRpc = discardRpc,
 				Punishment = punishment,
 			};
 		}

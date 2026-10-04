@@ -1,4 +1,4 @@
-using AmongUs.GameOptions;
+﻿using AmongUs.GameOptions;
 using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
 using InnerNet;
@@ -12,12 +12,12 @@ namespace HydraMenu.network
 		public readonly int targetClientId;
 		public int msgCount = 0;
 
-		public BatchedMessage(int targetClientId = (int)Constants.OwnerIds.Everyone)
+		public BatchedMessage(int targetClientId = (int)OwnerIds.Everyone)
 		{
 			writer = MessageWriter.Get(SendOption.Reliable);
 
 			this.targetClientId = targetClientId;
-			if(targetClientId == (int)Constants.OwnerIds.Everyone)
+			if(targetClientId == (int)OwnerIds.Everyone)
 			{
 				writer.StartMessage(InnerNet.Tags.GameData);
 				writer.Write(AmongUsClient.Instance.GameId);
@@ -32,7 +32,7 @@ namespace HydraMenu.network
 
 		private bool IsGlobal
 		{
-			get { return targetClientId == (int)Constants.OwnerIds.Everyone; }
+			get { return targetClientId == (int)OwnerIds.Everyone; }
 		}
 
 		private bool AmTarget
@@ -50,10 +50,56 @@ namespace HydraMenu.network
 			msgCount++;
 		}
 
-		public void QueueSpawn(InnerNetObject netObject, int ownerId = (int)Constants.OwnerIds.Host, SpawnFlags flags = SpawnFlags.None)
+		public void QueueSpawn(InnerNetObject netObject, int ownerId = (int)OwnerIds.Host, SpawnFlags flags = SpawnFlags.None)
 		{
 			SpawnGameDataMessage spawn = AmongUsClient.Instance.CreateSpawnMessage(netObject, ownerId, flags);
 			spawn.Serialize(writer);
+
+			msgCount++;
+		}
+
+		public void QueueDespawn(InnerNetObject netObject)
+		{
+			// Keep a copy of the net object's net ID
+			// AmongUsClient::RemoveNetObject will result in the net object's net ID being set to uint.MaxValue
+			uint netId = netObject.NetId;
+
+			if(IsGlobal || AmTarget)
+			{
+				Object.Destroy(netObject.gameObject);
+				AmongUsClient.Instance.RemoveNetObject(netObject);
+				if(AmTarget) return;
+			}
+
+			QueueDespawn(netId);
+		}
+
+		public void QueueDespawn(uint netId)
+		{
+			writer.StartMessage((byte)GameDataTypes.DespawnFlag);
+			writer.WritePacked(netId);
+			writer.EndMessage();
+
+			msgCount++;
+		}
+
+		public void QueueClientReady(int clientId)
+		{
+			ClientData client = AmongUsClient.Instance.FindClientById(clientId);
+			QueueClientReady(client);
+		}
+
+		public void QueueClientReady(ClientData client)
+		{
+			if(IsGlobal || AmTarget)
+			{
+				client.IsReady = true;
+				if(AmTarget) return;
+			}
+
+			writer.StartMessage((byte)GameDataTypes.ReadyFlag);
+			writer.WritePacked(client.Id);
+			writer.EndMessage();
 
 			msgCount++;
 		}
@@ -124,6 +170,46 @@ namespace HydraMenu.network
 			writer.Write((byte)RpcCalls.MurderPlayer);
 			writer.WritePacked(target.NetId);
 			writer.Write((int)result);
+			writer.EndMessage();
+
+			msgCount++;
+		}
+
+		public void QueueSendChat(PlayerControl source, string text)
+		{
+			if(IsGlobal || AmTarget)
+			{
+				HudManager.Instance.Chat.AddChat(source, text, false);
+				if(AmTarget) return;
+			}
+
+			writer.StartMessage((byte)GameDataTypes.RpcFlag);
+			writer.WritePacked(source.NetId);
+			writer.Write((byte)RpcCalls.SendChat);
+			writer.Write(text);
+			writer.EndMessage();
+
+			msgCount++;
+		}
+
+		public void QueueSetScanner(PlayerControl source, bool scanning)
+		{
+			QueueSetScanner(source, scanning, ++source.scannerCount);
+		}
+
+		public void QueueSetScanner(PlayerControl source, bool scanning, byte seq)
+		{
+			if(IsGlobal || AmTarget)
+			{
+				source.SetScanner(scanning, seq);
+				if(AmTarget) return;
+			}
+
+			writer.StartMessage((byte)GameDataTypes.RpcFlag);
+			writer.WritePacked(source.NetId);
+			writer.Write((byte)RpcCalls.SetScanner);
+			writer.Write(scanning);
+			writer.Write(seq);
 			writer.EndMessage();
 
 			msgCount++;
@@ -248,6 +334,23 @@ namespace HydraMenu.network
 			msgCount++;
 		}
 
+		public void QueueSetTasks(NetworkedPlayerInfo player, byte[] tasks)
+		{
+			if(IsGlobal || AmTarget)
+			{
+				player.SetTasks(tasks);
+				if(AmTarget) return;
+			}
+
+			writer.StartMessage((byte)GameDataTypes.RpcFlag);
+			writer.WritePacked(player.NetId);
+			writer.Write((byte)RpcCalls.SetTasks);
+			writer.WriteBytesAndSize(tasks);
+			writer.EndMessage();
+
+			msgCount++;
+		}
+
 		public void QueueUpdateSystem(PlayerControl source, SystemTypes system, byte value)
 		{
 			if(IsGlobal || AmTarget)
@@ -288,6 +391,11 @@ namespace HydraMenu.network
 			msgCount++;
 		}
 
+		public void QueueSetHatStr(PlayerControl source, string hat)
+		{
+			QueueSetHatStr(source, hat, ++source.Data.DefaultOutfit.HatSequenceId);
+		}
+
 		public void QueueSetHatStr(PlayerControl source, string hat, byte seqId)
 		{
 			if(IsGlobal || AmTarget)
@@ -304,6 +412,11 @@ namespace HydraMenu.network
 			writer.EndMessage();
 
 			msgCount++;
+		}
+
+		public void QueueSetSkinStr(PlayerControl source, string skin)
+		{
+			QueueSetSkinStr(source, skin, ++source.Data.DefaultOutfit.SkinSequenceId);
 		}
 
 		public void QueueSetSkinStr(PlayerControl source, string skin, byte seqId)
@@ -324,6 +437,11 @@ namespace HydraMenu.network
 			msgCount++;
 		}
 
+		public void QueueSetPetStr(PlayerControl source, string pet)
+		{
+			QueueSetPetStr(source, pet, ++source.Data.DefaultOutfit.PetSequenceId);
+		}
+
 		public void QueueSetPetStr(PlayerControl source, string pet, byte seqId)
 		{
 			if(IsGlobal || AmTarget)
@@ -342,6 +460,11 @@ namespace HydraMenu.network
 			msgCount++;
 		}
 
+		public void QueueSetVisorStr(PlayerControl source, string visor)
+		{
+			QueueSetVisorStr(source, visor, ++source.Data.DefaultOutfit.VisorSequenceId);
+		}
+
 		public void QueueSetVisorStr(PlayerControl source, string visor, byte seqId)
 		{
 			if(IsGlobal || AmTarget)
@@ -358,6 +481,11 @@ namespace HydraMenu.network
 			writer.EndMessage();
 
 			msgCount++;
+		}
+
+		public void QueueSetNameplateStr(PlayerControl source, string nameplate)
+		{
+			QueueSetNameplateStr(source, nameplate, ++source.Data.DefaultOutfit.NamePlateSequenceId);
 		}
 
 		public void QueueSetNameplateStr(PlayerControl source, string nameplate, byte seqId)
@@ -489,12 +617,12 @@ namespace HydraMenu.network
 			int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 			if(msgCount > packingLimit)
 			{
-				Hydra.Log.LogWarning($"BatchedMessage 包含 {msgCount} 条打包消息，超过打包消息上限 {packingLimit}。可能导致反作弊断开连接");
+				Hydra.Log.LogWarning($"BatchedMessage has {msgCount} packed messages, which exceeds the packed message limit of {packingLimit}. This may result in anticheat disconnections");
 			}
 
 			if(writer.Length > 1201)
 			{
-				Hydra.Log.LogWarning($"BatchedMessage 大小为 {writer.Length} 字节，超过原版上限 1201 字节。可能导致反作弊断开连接");
+				Hydra.Log.LogWarning($"BatchedMessage has a size of {writer.Length} bytes, which exceeds the vanilla limit of 1201 bytes. This may result in anticheat disconnections");
 			}
 
 			if(msgCount > 0)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
@@ -61,7 +61,7 @@ namespace HydraMenu.modules
 				PropertyInfo property = type.GetProperty(propertyName);
 				if(property == null)
 				{
-					Hydra.Log.LogWarning($"配置中存在模块 {name} 的设置 {propertyName}，但此模块无此设置");
+					Hydra.Log.LogWarning($"Config has setting {propertyName} for module {name} when this module has no such setting");
 					continue;
 				}
 

@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.spoofer
 {
 	internal class SpoofVersion : Module
 	{
-		public SpoofVersion() : base("伪装版本") { }
+		public SpoofVersion() : base("SpoofVersion") { }
 
 		public int spoofedVersion = Constants.GetBroadcastVersion();
 		public bool UseModdedProtocol { get; set; } = false;
@@ -19,7 +19,7 @@ namespace HydraMenu.modules.spoofer
 		{
 			static bool Prefix(ref int __result)
 			{
-				// 如果我们使用伪装版本，启动本地大厅或进入自由模式会出错
+				// Starting a local lobby or entering Freeplay will bug out if we are using a spoofed version
 				if(!Instance.Enabled || AmongUsClient.Instance == null || AmongUsClient.Instance.NetworkMode != NetworkModes.OnlineGame) return true;
 
 				__result = Instance.spoofedVersion;

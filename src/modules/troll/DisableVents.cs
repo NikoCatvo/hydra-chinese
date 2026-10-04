@@ -1,8 +1,8 @@
-namespace HydraMenu.modules.troll
+﻿namespace HydraMenu.modules.troll
 {
 	internal class DisableVents : Module
 	{
-		public DisableVents() : base("禁用通风管道") { }
+		public DisableVents() : base("DisableVents") { }
 
 		private void KickPlayerFromVent(PlayerControl player, byte ventId)
 		{
@@ -25,7 +25,7 @@ namespace HydraMenu.modules.troll
 				ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Ventilation, out ISystemType system);
 				VentilationSystem ventSystem = system.Cast<VentilationSystem>();
 
-				// 踢出当前在通风管道中的所有玩家
+				// Kick out all players who are currently inside a vent
 				foreach(PlayerControl player in PlayerControl.AllPlayerControls)
 				{
 					if(!ventSystem.PlayersInsideVents.ContainsKey(player.PlayerId)) continue;

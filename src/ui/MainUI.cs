@@ -1,4 +1,4 @@
-using HydraMenu.ui.sections;
+﻿using HydraMenu.ui.sections;
 using System;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.ui
 {
 	public class MainUI : MonoBehaviour
 	{
-		// 当前窗口
+		// Current window
 		public KeyCode menuKey = KeyCode.Insert;
 		public bool visible = false;
 		public static float scale = 1.0f;
@@ -66,14 +66,14 @@ namespace HydraMenu.ui
 			Event currentEvent = Event.current;
 			if(currentEvent == null) return;
 
-			// Input::GetKeyDown(KeyCodes.Insert) 如果按下专用 Insert 键返回 true，但小键盘 Insert 键不返回
-			// 所以我们必须依赖 Event.current
+			// Input::GetKeyDown(KeyCodes.Insert) returns true if you press the dedicated Insert key, but not the numpad Insert key
+			// so we have to rely on Event.current here
 			if(currentEvent.type == EventType.KeyDown && currentEvent.keyCode == menuKey)
 			{
 				visible = !visible;
 			}
 
-			// 用于测试通知系统的工具
+			// Tool to test the notifications system
 			if(Input.GetKeyDown(KeyCode.F6))
 			{
 				System.Random random = new System.Random();
@@ -82,7 +82,7 @@ namespace HydraMenu.ui
 
 			if(!visible) return;
 
-			// 通过方向键处理当前分区的切换
+			// Handle changing the current section through arrow keys
 			if(Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
 			{
 				int offset = Input.GetKeyDown(KeyCode.UpArrow) ? -1 : 1;
@@ -107,14 +107,14 @@ namespace HydraMenu.ui
 
 			GUI.skin.label.fontSize = (int)(13 * scale);
 
-			// 渲染 UI 盒子
-			GUI.Box(new Rect(windowPosition.x, windowPosition.y, WindowSize.x, WindowSize.y), $"{MyPluginInfo.PLUGIN_NAME} - {MyPluginInfo.PLUGIN_VERSION} 汉化by小紫 上传by微生猫 https://github.com/NikoCatvo/hydra-chinese", Styles.MainBox);
+			// Render UI box
+			GUI.Box(new Rect(windowPosition.x, windowPosition.y, WindowSize.x, WindowSize.y), $"{MyPluginInfo.PLUGIN_NAME} - {MyPluginInfo.PLUGIN_VERSION} | 汉化 by 微生猫", Styles.MainBox);
 
 			for(byte i = 0; i < sections.Length; i++)
 			{
 				Section section = sections[i];
 
-				// 将标签页添加到左侧面板
+				// Add the tab to the left-pane
 				RenderTab(i, section);
 
 				if(i == activeTab)
@@ -138,8 +138,8 @@ namespace HydraMenu.ui
 
 			switch(currentEvent.type)
 			{
-// 我尝试使用 currentEvent.delta 获取上一个鼠标位置和当前位置的增量，
-			// 但我发现它会频繁"跳过"，导致窗口盒子无法正确对齐到实际拖拽位置
+				// I tried using currentEvent.delta to get the delta between the last mouse position and the current one,
+				// however I noticed it would 'skip' quite frequently resulting in the window box not properly lining up where it should actually be dragged
 				case EventType.MouseDown:
 					if(!IsInBox(mousePos)) break;
 

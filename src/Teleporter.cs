@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 using HydraMenu.network;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,23 +7,23 @@ namespace HydraMenu
 {
 	internal class Teleporter
 	{
-		// 这个存在的原因与破坏的 UpdateSystemsDirectly 选项相同
+		// This exists for the same reason as why the UpdateSystemsDirectly option for sabotages exist
 		public static bool UseSnapToRPC { get; set; } = true;
 
 		public static readonly Dictionary<string, Vector2> skeldTeleportLocations = new Dictionary<string, Vector2>()
 		{
-			{ "餐厅", new Vector2(-0.78f, 2.48f) },
-			{ "武器室", new Vector2(8.04f, 1.24f) },
-			{ "医务室", new Vector2(-8.61f, -4.30f) },
+			{ "自助餐厅", new Vector2(-0.78f, 2.48f) },
+			{ "武器库", new Vector2(8.04f, 1.24f) },
+			{ "医疗室", new Vector2(-8.61f, -4.30f) },
 			{ "管理室", new Vector2(2.79f, -7.69f) },
 			{ "氧气室", new Vector2(6.50f, -3.50f) },
 			{ "导航室", new Vector2(16.77f, -4.67f) },
 			{ "护盾室", new Vector2(9.26f, -12.19f) },
 			{ "通讯室", new Vector2(5.10f, -15.24f ) },
-			{ "储物室", new Vector2(-3.72f, -14.61f ) },
+			{ "储藏室", new Vector2(-3.72f, -14.61f ) },
 			{ "电力室", new Vector2(-6.91f, -8.60f ) },
-			{ "上层引擎", new Vector2(-17.61f, -0.72f) },
-			{ "下层引擎", new Vector2(-17.33f, -13.10f ) },
+			{ "上引擎室", new Vector2(-17.61f, -0.72f) },
+			{ "下引擎室", new Vector2(-17.33f, -13.10f ) },
 			{ "安保室", new Vector2(-12.81f, -3.01f) },
 			{ "反应堆", new Vector2(-20.53f, -5.39f) },
 		};
@@ -31,30 +31,30 @@ namespace HydraMenu
 		public static readonly Dictionary<string, Vector2> miraTeleportLocations = new Dictionary<string, Vector2>()
 		{
 			{ "发射台", new Vector2(-4.43f, 1.98f) },
-			{ "医务室", new Vector2(14.58f, 0.33f) },
+			{ "医疗室", new Vector2(14.58f, 0.33f) },
 			{ "通讯室", new Vector2(15.60f, 4.96f) },
 			{ "更衣室", new Vector2(9.68f, 3.71f) },
-			{ "消毒室", new Vector2(6.12f, 6.34f) },
+			{ "净化室", new Vector2(6.12f, 6.34f) },
 			{ "实验室", new Vector2(9.43f, 13.98f) },
 			{ "反应堆", new Vector2(2.55f, 11.71f) },
 			{ "办公室", new Vector2(14.68f, 20.63f) },
 			{ "管理室", new Vector2(19.41f, 19.01f) },
 			{ "温室", new Vector2(17.92f, 23.86f) },
-			{ "餐厅", new Vector2(25.44f, 2.77f) },
-			{ "储物室", new Vector2(19.59f, 4.79f) },
-			{ "武器室", new Vector2(19.94f, -1.96f) },
+			{ "自助餐厅", new Vector2(25.44f, 2.77f) },
+			{ "储藏室", new Vector2(19.59f, 4.79f) },
+			{ "武器库", new Vector2(19.94f, -1.96f) },
 		};
 
 		public static readonly Dictionary<string, Vector2> polusTeleportLocations = new Dictionary<string, Vector2>()
 		{
-			{ "空降艇", new Vector2(16.61f, -1.17f) },
-			{ "储物室", new Vector2(20.35f, -11.46f) },
+			{ "运输飞船", new Vector2(16.61f, -1.17f) },
+			{ "储藏室", new Vector2(20.35f, -11.46f) },
 			{ "电力室", new Vector2(7.51f, -9.86f) },
 			{ "安保室", new Vector2(2.98f, -12.18f) },
 			{ "氧气室", new Vector2(1.55f, -16.81f ) },
 			{ "锅炉房", new Vector2(2.14f, -23.55f) },
 			{ "通讯室", new Vector2(11.70f, -15.87f ) },
-			{ "武器室", new Vector2(10.71f, -22.90f) },
+			{ "武器库", new Vector2(10.71f, -22.90f) },
 			{ "办公室", new Vector2(25.00f, -16.99f) },
 			{ "管理室", new Vector2(22.76f, -22.32f) },
 			{ "实验室", new Vector2(33.48f, -7.41f) },
@@ -71,51 +71,51 @@ namespace HydraMenu
 			{ "观景台", new Vector2(-13.62f, -12.68f ) },
 			{ "安保室", new Vector2(7.13f, -11.51f ) },
 			{ "电力室", new Vector2(16.29f, -6.33f ) },
-			{ "医疗室", new Vector2(22.85f, -7.40f ) },
+			{ "医务室", new Vector2(22.85f, -7.40f ) },
 			{ "货舱", new Vector2(33.74f, -0.76f ) },
 			{ "休息室", new Vector2(25.82f, 7.24f ) },
 			{ "档案室", new Vector2(19.86f, 10.07f ) },
-			{ "淋浴间", new Vector2(20.88f, 0.48f ) },
+			{ "淋浴室", new Vector2(20.88f, 0.48f ) },
 			{ "主厅", new Vector2(10.77f, -0.13f ) },
 			{ "禁闭室", new Vector2(-0.94f, 8.66f ) },
 			{ "金库", new Vector2(-8.78f, 8.13f ) },
-			{ "缺口房", new Vector2(4.15f, 8.73f ) },
-			{ "会议厅", new Vector2(11.03f, 16.06f ) },
+			{ "空隙房", new Vector2(4.15f, 8.73f ) },
+			{ "会议室", new Vector2(11.03f, 16.06f ) },
 		};
 
 		public static readonly Dictionary<string, Vector2> fungleTeleportLocations = new Dictionary<string, Vector2>()
 		{
-			{ "会议厅", new Vector2(-3.08f, -0.41f) },
+			{ "会议室", new Vector2(-3.08f, -0.41f) },
 			{ "宿舍", new Vector2(1.66f, -1.53f) },
 			{ "实验室", new Vector2(-4.31f, -8.56f) },
 			{ "温室", new Vector2(9.34f, -9.92f) },
 			{ "反应堆", new Vector2(21.38f, -7.48f) },
-			{ "上层引擎", new Vector2(21.54f, 2.97f) },
+			{ "上引擎室", new Vector2(21.54f, 2.97f) },
 			{ "瞭望台", new Vector2(7.79f, 1.53f) },
 			{ "矿坑", new Vector2(12.56f, 9.28f) },
 			{ "通讯室", new Vector2(21.17f, 13.70f) },
-			{ "储物室", new Vector2(-0.44f, 5.69f) },
-			{ "空降艇", new Vector2(-7.59f, 10.76f) },
-			{ "餐厅", new Vector2(-16.49f, 7.14f) },
-			{ "戏水区", new Vector2(-17.89f, -0.08f) },
+			{ "储藏室", new Vector2(-0.44f, 5.69f) },
+			{ "运输飞船", new Vector2(-7.59f, 10.76f) },
+			{ "自助餐厅", new Vector2(-16.49f, 7.14f) },
+			{ "水花区", new Vector2(-17.89f, -0.08f) },
 			{ "厨房", new Vector2(-15.55f, -7.52f) },
 			{ "码头", new Vector2(-23.00f, -7.16f) },
 		};
 
 		public static readonly Dictionary<string, Vector2> dleksTeleportLocations = new Dictionary<string, Vector2>()
 		{
-			{ "餐厅", new Vector2(0.78f, 2.48f) },
-			{ "武器室", new Vector2(-8.04f, 1.24f) },
-			{ "医务室", new Vector2(8.61f, -4.30f) },
+			{ "自助餐厅", new Vector2(0.78f, 2.48f) },
+			{ "武器库", new Vector2(-8.04f, 1.24f) },
+			{ "医疗室", new Vector2(8.61f, -4.30f) },
 			{ "管理室", new Vector2(-2.79f, -7.69f) },
 			{ "氧气室", new Vector2(-6.50f, -3.50f) },
 			{ "导航室", new Vector2(-16.77f, -4.67f) },
 			{ "护盾室", new Vector2(-9.26f, -12.19f) },
 			{ "通讯室", new Vector2(-5.10f, -15.24f ) },
-			{ "储物室", new Vector2(3.72f, -14.61f ) },
+			{ "储藏室", new Vector2(3.72f, -14.61f ) },
 			{ "电力室", new Vector2(6.91f, -8.60f ) },
-			{ "上层引擎", new Vector2(17.61f, -0.72f) },
-			{ "下层引擎", new Vector2(17.33f, -13.10f ) },
+			{ "上引擎室", new Vector2(17.61f, -0.72f) },
+			{ "下引擎室", new Vector2(17.33f, -13.10f ) },
 			{ "安保室", new Vector2(12.81f, -3.01f) },
 			{ "反应堆", new Vector2(20.53f, -5.39f) },
 		};
@@ -134,7 +134,7 @@ namespace HydraMenu
 				MapNames.Airship => airshipTeleportLocations,
 				MapNames.Fungle => fungleTeleportLocations,
 				MapNames.Dleks => dleksTeleportLocations,
-				// 如果当前地图没有任何传送位置，则默认使用 Skeld 的
+				// If we don't have any teleport locations for the current map then just default to the Skeld ones
 				_ => skeldTeleportLocations,
 			};
 		}
@@ -160,8 +160,8 @@ namespace HydraMenu
 
 		public static void TeleportAllTo(Vector2 position)
 		{
-			// 在 +25 模组协议大厅中，我们可以作为非房主发送 SetColor RPC
-			// 但我们仍受消息打包限制影响
+			// On +25 modded protocol lobbies, we are able to send SetColor RPCs as non-host
+			// however we are still affected by message packing limits
 			int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 			BatchedMessage batch = new BatchedMessage();
 
@@ -183,7 +183,7 @@ namespace HydraMenu
 		{
 			if(ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("通风管道传送", "游戏必须已开始才能使用此功能。");
+				Hydra.notifications.Send("管道传送", "需要游戏已经开始，该功能才能生效。");
 				return;
 			}
 
@@ -196,7 +196,7 @@ namespace HydraMenu
 
 			if(!VentSeqIds.ContainsKey(player))
 			{
-				// 足够高的值以超越实际的序列 ID
+				// High enough value to supersede the actual sequence ID
 				VentSeqIds.Add(player, 10000);
 			}
 

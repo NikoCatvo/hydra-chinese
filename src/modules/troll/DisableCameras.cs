@@ -1,42 +1,58 @@
-using Hazel;
+﻿using Hazel;
 using HydraMenu.network;
 
 namespace HydraMenu.modules.troll
 {
 	internal class DisableCameras : Module
 	{
-		// 通讯破坏激活时无法观看监控摄像头。我们可以利用这一点来禁用监控摄像头
-		// 当玩家开始观看摄像头时，对该玩家破坏通讯；当玩家停止观看摄像头时，修复该玩家的通讯破坏
-		public DisableCameras() : base("禁用摄像头") { }
+		// It is not possible to watch security cameras when the comms sabotage is active. We can abuse this to disable security cameras
+		// When a player starts to watch security cameras, sabotage comms for that player, when the player stops watching cameras, fix comms sabotage for that player
+		public DisableCameras() : base("DisableCameras") { }
 
 		private void OnPlayerEnterCameras(PlayerControl player)
 		{
-			// 如果我们为房主更新通讯，则所有人都会受到通讯影响
+			// If we update Comms for the host, then everybody will be affected by Comms
 			if(player.OwnerId == AmongUsClient.Instance.HostId || player == PlayerControl.LocalPlayer) return;
 
-			Hydra.Log.LogMessage($"{player.Data.PlayerName} 开始观看摄像头，发送通讯系统更新");
+			Hydra.Log.LogMessage($"{player.Data.PlayerName} started to watch cameras, sending Comms system update");
 
 			EnableCommsFor(player);
 		}
 
 		private void OnPlayerExitCameras(PlayerControl player)
 		{
-			// 如果我们为房主更新通讯，则所有人都会受到通讯影响
+			// If we update Comms for the host, then everybody will be affected by Comms
 			if(player.OwnerId == AmongUsClient.Instance.HostId || player == PlayerControl.LocalPlayer) return;
 
-			// 防止一种漏洞：如果通讯破坏处于激活状态，有人可能进入并离开安保摄像头以移除自身的通讯效果
+			// Prevent an exploit where if the comms sabotage is active, someone could enter and leave the security cameras to remove the comms effect from themselves
 			if(Sabotage.IsSabotageActive(SystemTypes.Comms))
 			{
-				// 存在一种边缘情况：如果有人在通讯被主动破坏时处于安保摄像头面板，且破坏被修复，
-				// 则该玩家将能够观看安保摄像头
-				// 考虑到此功能不太可能被任何人使用，我认为不值得修复此边缘情况
-				Hydra.Log.LogMessage($"{player.Data.name} 更新了安保摄像头，通讯破坏已激活，无需操作");
+				Hydra.Log.LogMessage($"{player.Data.name} updated security cameras, we do not need to do anything as the Comms sabotage is already active");
 				return;
 			}
 
-			Hydra.Log.LogMessage($"{player.Data.PlayerName} 停止观看摄像头，发送通讯系统更新");
+			Hydra.Log.LogMessage($"{player.Data.PlayerName} stopped watching cameras, sending Comms system update");
 
 			DisableCommsFor(player);
+		}
+
+		// Fix an edge case where if a player is watching cameras while the comms sabotage is in effect
+		// and someone fixes the comms sabotage, then the fake comms effect on the player will be removed
+		// and the player will be able to watch security cameras
+		private void OnCommsRepair()
+		{
+			Hydra.Log.LogMessage($"Comms sabotage was fixed, re-applying comms effect to all players watching security cameras");
+
+			// If we are the host, then make sure to flush any queued net objects
+			// It may take up to 100ms for SendAllStreamedObjects to be called by the game, so if we are re-applying the comms effect now
+			// then clients will first receive our enable comms sabotage message which we are sending here
+			// and then the game will later send a message with the comms sabotage fixed, overriding the enabled comms sabotage
+			if(AmongUsClient.Instance.AmHost)
+			{
+				AmongUsClient.Instance.SendAllStreamedObjects();
+			}
+
+			ReapplyCommsEffect();
 		}
 
 		private void EnableCommsFor(PlayerControl player)
@@ -51,7 +67,7 @@ namespace HydraMenu.modules.troll
 
 			MessageWriter systemUpdate = MessageWriter.Get(SendOption.Reliable);
 			systemUpdate.StartMessage((byte)SystemTypes.Comms);
-			// 1 = 通讯破坏激活，0 = 通讯破坏未激活
+			// 1 = Comms sabotage is active, 0 = Comms sabotage is inactive
 			systemUpdate.Write(1);
 			systemUpdate.EndMessage();
 
@@ -72,7 +88,7 @@ namespace HydraMenu.modules.troll
 
 			MessageWriter systemUpdate = MessageWriter.Get(SendOption.Reliable);
 			systemUpdate.StartMessage((byte)SystemTypes.Comms);
-			// 1 = 通讯破坏激活，0 = 通讯破坏未激活
+			// 1 = Comms sabotage is active, 0 = Comms sabotage is inactive
 			systemUpdate.Write(0);
 			systemUpdate.EndMessage();
 
@@ -81,31 +97,42 @@ namespace HydraMenu.modules.troll
 			batch.FinishBatch();
 		}
 
+		private void ReapplyCommsEffect()
+		{
+			if(ShipStatus.Instance == null) return;
+
+			ShipStatus.Instance.Systems.TryGetValue(SystemTypes.Security, out ISystemType system);
+			if(system == null) return;
+
+			SecurityCameraSystemType securitySystem = system.Cast<SecurityCameraSystemType>();
+
+			foreach(PlayerControl player in PlayerControl.AllPlayerControls)
+			{
+				if(player.OwnerId == AmongUsClient.Instance.HostId || player == PlayerControl.LocalPlayer || !securitySystem.PlayersUsing.Contains(player.PlayerId)) continue;
+
+				EnableCommsFor(player);
+			}
+		}
+
 		protected override void OnEnable()
 		{
-			if(ShipStatus.Instance != null)
+			ReapplyCommsEffect();
+
+			if(Utilities.GetCurrentMap() == MapNames.Fungle)
 			{
-				ISystemType system = ShipStatus.Instance.Systems[SystemTypes.Security];
-				if(system == null) return;
-
-				SecurityCameraSystemType securitySystem = system.Cast<SecurityCameraSystemType>();
-
-				foreach(PlayerControl player in PlayerControl.AllPlayerControls)
-				{
-					if(player.OwnerId == AmongUsClient.Instance.HostId || player == PlayerControl.LocalPlayer || !securitySystem.PlayersUsing.Contains(player.PlayerId)) return;
-
-					EnableCommsFor(player);
-				}
+				Hydra.notifications.Send("禁用摄像头", "此功能在真菌丛林地图上无效。", 10);
 			}
 
 			EventCoordinator.OnPlayerEnterCameras += OnPlayerEnterCameras;
 			EventCoordinator.OnPlayerExitCameras += OnPlayerExitCameras;
+			EventCoordinator.OnHudOverrideRepair += OnCommsRepair;
 		}
 
 		protected override void OnDisable()
 		{
 			EventCoordinator.OnPlayerEnterCameras -= OnPlayerEnterCameras;
 			EventCoordinator.OnPlayerExitCameras -= OnPlayerExitCameras;
+			EventCoordinator.OnHudOverrideRepair -= OnCommsRepair;
 		}
 	}
 }

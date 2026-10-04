@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using HydraMenu.network;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ namespace HydraMenu.routines
 {
 	public class DiscoHostRoutine : Routine
 	{
-		public DiscoHostRoutine() : base("迪斯科派对") { }
+		public DiscoHostRoutine() : base("DiscoHost") { }
 		public readonly HashSet<int> targets = new HashSet<int>();
 
 		public float RandomizationDelay { get; set; } = 0.5f;
@@ -24,8 +24,8 @@ namespace HydraMenu.routines
 
 			List<int> colors = Enumerable.Range(0, 18).ToList();
 
-			// 在 +25 模组协议大厅中，我们可以作为非房主发送 SetColor RPC
-			// 但我们仍受消息打包限制影响
+			// On +25 modded protocol lobbies, we are able to send SetColor RPCs as non-host
+			// however we are still affected by message packing limits
 			int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
 			BatchedMessage batch = new BatchedMessage();
 
@@ -33,7 +33,7 @@ namespace HydraMenu.routines
 			{
 				if(!IsGlobal && !targets.Contains(player.GetHashCode())) continue;
 
-				// 为每个玩家分配唯一颜色
+				// Assign each player a unique color
 				int color;
 				if(colors.Count != 0)
 				{
@@ -42,7 +42,7 @@ namespace HydraMenu.routines
 				}
 				else
 				{
-					// 为确保与超过 18 名玩家的大厅兼容
+					// To ensure compatability for lobbies with more than 18 players
 					color = rnd.Next(0, 18);
 				}
 
@@ -65,7 +65,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("迪斯科派对", "你离开了游戏，迪斯科派对已禁用。", 10);
+			Hydra.notifications.Send("迪斯科派对", "迪斯科派对已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -80,7 +80,7 @@ namespace HydraMenu.routines
 
 			if(Utilities.IsAnticheatPresent() && !AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("迪斯科派对", "迪斯科派对仅可由大厅房主使用。", 10);
+				Hydra.notifications.Send("迪斯科派对", "迪斯科派对仅限房间房主使用。", 10);
 				Enabled = false;
 				return;
 			}

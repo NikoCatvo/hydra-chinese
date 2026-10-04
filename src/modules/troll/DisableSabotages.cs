@@ -1,13 +1,13 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.troll
 {
 	internal class DisableSabotages : Module
 	{
-		public DisableSabotages() : base("禁用破坏") { }
+		public DisableSabotages() : base("DisableSabotages") { }
 
 		public readonly float MINIMUM_TIMER_DURATION = 0.1f;
-		// 可以是任何未分配给任何 SystemTypes 的值
+		// Can be any value that is not assigned to any SystemTypes
 		public readonly byte INVALID_SYSTEM_TYPE = 255;
 
 		private static DisableSabotages Instance
@@ -24,12 +24,12 @@ namespace HydraMenu.modules.troll
 			}
 		}
 
-		// 当房主接收到破坏系统更新时，它首先确保没有进行中的会议，且破坏冷却已结束
-		// 如果所有检查通过，房主将破坏冷却设为 30.0 秒，然后根据破坏类型处理要更新的系统
-		// 唯一的问题是房主在未先确认尝试的破坏是否真正成功的情况下，就更新了破坏冷却
-		// 这意味着如果我们破坏一个没有关联破坏的系统，房主只会重置破坏冷却
-		// 我们可以利用这个缺陷，每次破坏冷却结束时破坏一个无效系统，来创建一个反破坏机制
-		// 这会让内鬼几乎没有时间进行任何破坏
+		// When the host receives a Sabotage system update, it first ensures that there is no active meeting, and that the sabotage cooldown has ended
+		// If all checks pass, the host sets the sabotage cooldown to 30.0s and then handles which system to update based off of the sabotage type
+		// The only problem is that the host updates the sabotage cooldown without first confirming that the attempted sabotage actually succeeded
+		// Meaning that if we were to sabotage a system that does not have an associated sabotage, the host would just reset the sabotage cooldown
+		// We can use flaw to create an anti-sabotage by sabotaging an invalid system every time the sabotage cooldown ends
+		// which gives the impostors practically no time to be able to do any sabotages themselves
 		[HarmonyPatch(typeof(SabotageSystemType), nameof(SabotageSystemType.Deserialize))]
 		class BlockSabotagesNonHost
 		{
@@ -37,14 +37,14 @@ namespace HydraMenu.modules.troll
 			{
 				if(!Instance.Enabled || AmongUsClient.Instance.AmHost || __instance.Timer > Instance.MINIMUM_TIMER_DURATION || MeetingHud.Instance) return;
 
-				Hydra.Log.LogMessage($"破坏冷却已减少至 {__instance.Timer}，发送破坏系统更新");
+				Hydra.Log.LogMessage($"Sabotage cooldown has depleted to {__instance.Timer}, sending Sabotage system update");
 				ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Sabotage, Instance.INVALID_SYSTEM_TYPE);
 			}
 		}
 
 		private void OnMeetingEnd()
 		{
-			Hydra.Log.LogMessage($"会议已结束，发送破坏系统更新");
+			Hydra.Log.LogMessage($"Meeting has ended, sending Sabotage system update");
 			ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Sabotage, Instance.INVALID_SYSTEM_TYPE);
 		}
 

@@ -5,7 +5,7 @@ namespace HydraMenu.anticheat
 {
 	internal abstract class RpcCheck : ICheck
 	{
-		public virtual bool Enabled { get; set; } = true;
+		public bool Enabled { get; set; } = true;
 
 		public virtual bool Validate(PlayerControl player, MessageReader reader)
 		{
@@ -21,8 +21,8 @@ namespace HydraMenu.anticheat
 
 		public virtual Type GetExpectedNetObject()
 		{
-// PlayerControl 网络对象的 RPC 比任何其他网络对象都多
-		// 为方便起见，除非另有说明，每个 RpcCheck 实例都针对 PlayerControl 网络对象
+			// There are more RPCs for the PlayerControl net object than for any other net object
+			// To make it easier for us, each instance of RpcCheck will be for the PlayerControl net object unless stated otherwise
 			return typeof(PlayerControl);
 		}
 	}

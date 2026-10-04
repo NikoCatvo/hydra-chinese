@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using HydraMenu.network;
 
 namespace HydraMenu.modules.host
 {
 	internal class FakeShapeshiftBubble : Module
 	{
-		public FakeShapeshiftBubble() : base("假变身气泡") { }
+		public FakeShapeshiftBubble() : base("FakeShapeshiftBubble") { }
 
 		private static FakeShapeshiftBubble Instance
 		{

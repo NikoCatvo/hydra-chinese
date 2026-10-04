@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
@@ -9,19 +9,19 @@ namespace HydraMenu.anticheat.rpc
 			MapNames map = Utilities.GetCurrentMap();
 			if(map != MapNames.Airship)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在正确地图之外尝试使用平台。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在不支持移动平台的地图上尝试使用移动平台。");
 				return false;
 			}
 
 			if(ShipStatus.Instance == null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在不存在 ShipStatus 实例时尝试使用平台。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在 ShipStatus 实例不存在时尝试使用移动平台。");
 				return false;
 			}
 
 			if(GameManager.Instance.IsHideAndSeek())
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在躲猫猫模式中尝试使用平台。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在躲猫猫模式中尝试使用移动平台。");
 				return false;
 			}
 

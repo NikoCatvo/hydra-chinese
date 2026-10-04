@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
@@ -9,31 +9,31 @@ namespace HydraMenu.ui.sections
 
 		public override void Render()
 		{
-			// 网络
-			ModuleManager.forceDtls.Enabled = GUILayout.Toggle(ModuleManager.forceDtls.Enabled, "强制启用 DTLS 以加密网络数据");
+			// Network
+			ModuleManager.forceDtls.Enabled = GUILayout.Toggle(ModuleManager.forceDtls.Enabled, "强制启用 DTLS 加密网络数据");
 
-			ModuleManager.bypassDisconnectPenalty.Enabled = GUILayout.Toggle(ModuleManager.bypassDisconnectPenalty.Enabled, "绕过断开连接惩罚");
-			ModuleManager.blockServerTeleports.Enabled = GUILayout.Toggle(ModuleManager.blockServerTeleports.Enabled, "阻止来自服务器的位置更新");
-			ModuleManager.blockUnauthorizedUpdates.Enabled = GUILayout.Toggle(ModuleManager.blockUnauthorizedUpdates.Enabled, "阻止未经授权的系统更新");
-			ModuleManager.bypassShapeshiftRatelimits.Enabled = GUILayout.Toggle(ModuleManager.bypassShapeshiftRatelimits.Enabled, "绕过 Shapeshift RPC 的速率限制");
+			ModuleManager.bypassDisconnectPenalty.Enabled = GUILayout.Toggle(ModuleManager.bypassDisconnectPenalty.Enabled, "绕过断线惩罚");
+			ModuleManager.blockServerTeleports.Enabled = GUILayout.Toggle(ModuleManager.blockServerTeleports.Enabled, "拦截来自服务器的位置更新");
+			ModuleManager.blockUnauthorizedUpdates.Enabled = GUILayout.Toggle(ModuleManager.blockUnauthorizedUpdates.Enabled, "拦截未授权的系统更新");
+			ModuleManager.bypassShapeshiftRatelimits.Enabled = GUILayout.Toggle(ModuleManager.bypassShapeshiftRatelimits.Enabled, "绕过变形 RPC 的频率限制");
 
-			ModuleManager.antiCrash.Enabled = GUILayout.Toggle(ModuleManager.antiCrash.Enabled, "抵御 ReportDeadBody 大厅崩溃漏洞");
+			ModuleManager.antiCrash.Enabled = GUILayout.Toggle(ModuleManager.antiCrash.Enabled, "防护 ReportDeadBody 房间崩溃漏洞");
 
-			// 过载防护
+			// Overloads
 			GUILayout.Space(5);
-			GUILayout.Label("防过载:");
+			GUILayout.Label("防过载：");
 			ModuleManager.antiOverload.Enabled = GUILayout.Toggle(ModuleManager.antiOverload.Enabled, "启用");
-			ModuleManager.antiOverload.BlockLargeGameMessages = GUILayout.Toggle(ModuleManager.antiOverload.BlockLargeGameMessages, "阻止大型游戏消息");
-			ModuleManager.antiOverload.BlockInvalidGameDataMessages = GUILayout.Toggle(ModuleManager.antiOverload.BlockInvalidGameDataMessages, "阻止无效的游戏数据消息类型");
-			ModuleManager.antiOverload.HardenedPacketUIntDeserializer = GUILayout.Toggle(ModuleManager.antiOverload.HardenedPacketUIntDeserializer, "使用加固的压缩整数反序列化器");
-			ModuleManager.antiOverload.BlockVotingCompleteOverload = GUILayout.Toggle(ModuleManager.antiOverload.BlockVotingCompleteOverload, "抵御 VotingComplete 过载");
+			ModuleManager.antiOverload.BlockLargeGameMessages = GUILayout.Toggle(ModuleManager.antiOverload.BlockLargeGameMessages, "拦截超大游戏消息");
+			ModuleManager.antiOverload.BlockInvalidGameDataMessages = GUILayout.Toggle(ModuleManager.antiOverload.BlockInvalidGameDataMessages, "拦截无效的游戏数据消息类型");
+			ModuleManager.antiOverload.HardenedPacketUIntDeserializer = GUILayout.Toggle(ModuleManager.antiOverload.HardenedPacketUIntDeserializer, "使用加固的打包整数反序列化器");
+			ModuleManager.antiOverload.BlockVotingCompleteOverload = GUILayout.Toggle(ModuleManager.antiOverload.BlockVotingCompleteOverload, "防护 VotingComplete 过载攻击");
 
-			// 踢人漏洞防护
+			// Kick Exploits
 			GUILayout.Space(5);
-			GUILayout.Label("防踢出:");
+			GUILayout.Label("防踢：");
 			ModuleManager.antiKick.Enabled = GUILayout.Toggle(ModuleManager.antiKick.Enabled, "启用");
-			ModuleManager.antiKick.BlockVotekicks = GUILayout.Toggle(ModuleManager.antiKick.BlockVotekicks, "作为房主抵御投票踢人");
-			ModuleManager.antiKick.BlockHostOnlyRpcExploit = GUILayout.Toggle(ModuleManager.antiKick.BlockHostOnlyRpcExploit, "抵御仅房主 RPC 踢人漏洞");
+			ModuleManager.antiKick.BlockVotekicks = GUILayout.Toggle(ModuleManager.antiKick.BlockVotekicks, "防护针对房主的投票踢人");
+			ModuleManager.antiKick.BlockHostOnlyRpcExploit = GUILayout.Toggle(ModuleManager.antiKick.BlockHostOnlyRpcExploit, "防护仅房主 RPC 踢人漏洞");
 		}
 	}
 }

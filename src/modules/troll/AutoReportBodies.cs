@@ -1,10 +1,10 @@
-namespace HydraMenu.modules.troll
+﻿namespace HydraMenu.modules.troll
 {
 	internal class AutoReportBodies : Module
 	{
-		public AutoReportBodies() : base("自动报尸体") { }
+		public AutoReportBodies() : base("AutoReportBodies") { }
 
-		// 应被栽赃报告尸体的玩家
+		// The player that should be framed for reporting the body
 		public PlayerControl target;
 
 		private void OnPlayerMurder(PlayerControl murderer, PlayerControl victim, MurderResultFlags flags)
@@ -19,7 +19,7 @@ namespace HydraMenu.modules.troll
 
 			if(PlayerControl.LocalPlayer.Data.IsDead) return;
 
-			Hydra.notifications.Send("自动报尸体", $"{victim.Data.PlayerName} 被 {murderer.Data.PlayerName} ({Utilities.GetPlayerColor(murderer.Data)}) 击杀，其尸体已被自动报告。");
+			Hydra.notifications.Send("自动报告尸体", $"{victim.Data.PlayerName} 被 {murderer.Data.PlayerName}（{ui.Lang.Tr(Utilities.GetPlayerColor(murderer.Data))}）杀害，尸体已自动报告。");
 			PlayerControl.LocalPlayer.CmdReportDeadBody(victim.Data);
 		}
 
@@ -30,6 +30,8 @@ namespace HydraMenu.modules.troll
 
 		protected override void OnDisable()
 		{
+			target = null;
+
 			EventCoordinator.OnPlayerMurder -= OnPlayerMurder;
 		}
 	}

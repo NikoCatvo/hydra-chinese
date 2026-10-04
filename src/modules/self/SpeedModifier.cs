@@ -1,12 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.self
 {
 	internal class SpeedModifier : Module
 	{
-		public SpeedModifier() : base("速度修改")
+		public SpeedModifier() : base("SpeedModifier")
 		{
-			// 此模块可始终启用
+			// This module can be enabled at all times
 			base.Enabled = true;
 		}
 

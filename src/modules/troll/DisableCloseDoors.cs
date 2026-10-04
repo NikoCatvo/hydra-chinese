@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 using HydraMenu.network;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.modules.troll
 {
 	internal class DisableCloseDoors : Module
 	{
-		public DisableCloseDoors() : base("禁用关门") { }
+		public DisableCloseDoors() : base("DisableCloseDoors") { }
 
 		private static DisableCloseDoors Instance
 		{
@@ -22,7 +22,7 @@ namespace HydraMenu.modules.troll
 			}
 		}
 
-		// 虽然我们作为非房主无法阻止门真正被关闭，但我们可以在门被锁定后立即修复它们
+		// While we cant block doors from actually being closed as non-host, we can just fix the doors as soon as they get locked
 		[HarmonyPatch(typeof(DoorsSystemType), nameof(DoorsSystemType.Deserialize))]
 		class DoorsDeserialize
 		{
@@ -35,7 +35,7 @@ namespace HydraMenu.modules.troll
 				int systems = (int)reader.ReadByte();
 				if(systems > ShipStatus.Instance.Systems.Count || systems > reader.BytesRemaining) goto end;
 
-				// 一个字节的系统类型标识符，一个浮点数（四字节）用于系统冷却时间
+				// One byte identifier for the systemtype, and a float (four bytes) for system cooldown
 				reader.Position += systems * (1 + 4);
 
 				int packingLimit = AmongUsClient.Instance.GetMaxMessagePackingLimit();
@@ -66,7 +66,7 @@ namespace HydraMenu.modules.troll
 		{
 			if(!Sabotage.CanUnlockDoors())
 			{
-				Hydra.notifications.Send("禁用关门", "禁用关门仅在大厅房主，或处于 Polus、Airship、Fungle 地图时有效。");
+				Hydra.notifications.Send("禁用关门", "只有房主或在波拉斯、飞艇、真菌丛林地图上才能使用此功能。");
 			}
 		}
 	}

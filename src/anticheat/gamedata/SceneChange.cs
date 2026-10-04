@@ -1,4 +1,4 @@
-using AmongUs.InnerNet.GameDataMessages;
+﻿using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
 using InnerNet;
 
@@ -14,14 +14,14 @@ namespace HydraMenu.anticheat.gamedata
 			ClientData client = AmongUsClient.Instance.FindClientById(clientId);
 			if(client == null)
 			{
-				Anticheat.Flag($"收到未知客户端的 SceneChange 消息: {clientId}。");
+				Anticheat.Flag($"收到来自未知客户端的 SceneChange 消息：{clientId}。");
 				return false;
 			}
 
-			// 如果房主收到 Tutorial 场景切换，它会生成一个 Skeld 地图实例
+			// If the host receives a scene change of Tutorial, it will spawn in an instance of The Skeld map
 			if(scene == "Tutorial")
 			{
-				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} 发送了 Tutorial 场景切换。");
+				Anticheat.Flag(client.Character, $"{client.Character.Data.PlayerName} 发送了切换至 Tutorial 场景的消息。");
 				return false;
 			}
 

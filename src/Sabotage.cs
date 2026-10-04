@@ -1,4 +1,4 @@
-using HydraMenu.network;
+﻿using HydraMenu.network;
 using Il2CppInterop.Runtime;
 using System.Collections.Generic;
 
@@ -7,14 +7,14 @@ namespace HydraMenu
 	internal class Sabotage
 	{
 		/*
-		当你作为内鬼进行破坏时，你的游戏会使用破坏的系统 ID 作为 amount 字段来更新 SystemTypes.Sabotage，并将其发送给房主
-		房主接收到系统更新后，会检查游戏当前是否处于会议中，或破坏是否处于冷却中，如果满足任一条件则阻止破坏
-		如果所有检查都通过，房主会直接更新系统（例如如果你破坏了反应堆，房主会更新 SystemTypes.Reactor）并向所有在线客户端广播更新
-		为了绕过会议和冷却检查，我们可以直接自己更新系统，房主会将其中继给所有在线客户端
+		When you sabotage as imposter, your game updates SystemTypes.Sabotage with the amount field being the system ID of the sabotage and sends it to the host
+		Upon receiving the system update by the host, the host checks if the game is currently in a meeting or if sabotages are on cooldown, and blocks the sabotage if either of the conditiions are met
+		If all checks go well, then the host updates the systems directly (so if you sabotaged Reactor, the host would update SystemTypes.Reactor) and broadcast the update to all online clients
+		To get around the meeting and cooldown checks, we can just update the systems ourselves, which the host will relay to all online clients
 		*/
 		public static bool UpdateSystemsDirectly { get; set; } = true;
 
-		public static Dictionary<string, SystemTypes> skeldSabotages = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> skeldSabotages = new Dictionary<string, SystemTypes>()
 		{
 			{ "反应堆", SystemTypes.Reactor },
 			{ "氧气", SystemTypes.LifeSupp },
@@ -22,18 +22,18 @@ namespace HydraMenu
 			{ "通讯", SystemTypes.Comms }
 		};
 
-		public static Dictionary<string, SystemTypes> skeldDoors = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> skeldDoors = new Dictionary<string, SystemTypes>()
 		{
-			{ "餐厅", SystemTypes.Cafeteria },
-			{ "储物室", SystemTypes.Storage },
-			{ "医务室", SystemTypes.MedBay },
+			{ "自助餐厅", SystemTypes.Cafeteria },
+			{ "储藏室", SystemTypes.Storage },
+			{ "医疗室", SystemTypes.MedBay },
 			{ "安保室", SystemTypes.Security },
-			{ "上层引擎", SystemTypes.UpperEngine },
-			{ "下层引擎", SystemTypes.LowerEngine },
-			{ "电力室", SystemTypes.Electrical }
+			{ "上引擎室", SystemTypes.UpperEngine },
+			{ "下引擎室", SystemTypes.LowerEngine },
+			{ "电力", SystemTypes.Electrical }
 		};
 
-		public static Dictionary<string, SystemTypes> miraSabotages = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> miraSabotages = new Dictionary<string, SystemTypes>()
 		{
 			{ "反应堆", SystemTypes.Reactor },
 			{ "氧气", SystemTypes.LifeSupp },
@@ -41,53 +41,53 @@ namespace HydraMenu
 			{ "通讯", SystemTypes.Comms }
 		};
 
-		public static Dictionary<string, SystemTypes> polusSabotages = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> polusSabotages = new Dictionary<string, SystemTypes>()
 		{
 			{ "反应堆", SystemTypes.Laboratory },
 			{ "灯光", SystemTypes.Electrical },
 			{ "通讯", SystemTypes.Comms }
 		};
 
-		public static Dictionary<string, SystemTypes> polusDoors = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> polusDoors = new Dictionary<string, SystemTypes>()
 		{
 			{ "办公室", SystemTypes.Office },
 			{ "通讯", SystemTypes.Comms },
 			{ "实验室", SystemTypes.Laboratory },
-			{ "消毒室", SystemTypes.Decontamination },
-			{ "电力室", SystemTypes.Electrical },
+			{ "净化室", SystemTypes.Decontamination },
+			{ "电力", SystemTypes.Electrical },
 			{ "氧气", SystemTypes.LifeSupp },
-			{ "武器室", SystemTypes.Weapons },
-			{ "储物室", SystemTypes.Storage }
+			{ "武器库", SystemTypes.Weapons },
+			{ "储藏室", SystemTypes.Storage }
 		};
 
-		public static Dictionary<string, SystemTypes> airshipSabotages = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> airshipSabotages = new Dictionary<string, SystemTypes>()
 		{
 			{ "反应堆", SystemTypes.HeliSabotage },
 			{ "灯光", SystemTypes.Electrical },
 			{ "通讯", SystemTypes.Comms }
 		};
 
-		public static Dictionary<string, SystemTypes> airshipDoors = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> airshipDoors = new Dictionary<string, SystemTypes>()
 		{
 			{ "禁闭室", SystemTypes.Brig },
 			{ "档案室", SystemTypes.Records },
 			{ "通讯", SystemTypes.Comms },
 			{ "主厅", SystemTypes.MainHall },
 			{ "厨房", SystemTypes.Kitchen },
-			{ "医疗室", SystemTypes.Medical },
+			{ "医务室", SystemTypes.Medical },
 			{ "休息室", SystemTypes.Lounge }
 		};
 
-		public static Dictionary<string, SystemTypes> fungleSabotages = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> fungleSabotages = new Dictionary<string, SystemTypes>()
 		{
 			{ "反应堆", SystemTypes.Reactor },
 			{ "通讯", SystemTypes.Comms },
-			{ "蘑菇混乱", SystemTypes.MushroomMixupSabotage }
+			{ "蘑菇混战", SystemTypes.MushroomMixupSabotage }
 		};
 
-		public static Dictionary<string, SystemTypes> fungleDoors = new Dictionary<string, SystemTypes>()
+		public static readonly Dictionary<string, SystemTypes> fungleDoors = new Dictionary<string, SystemTypes>()
 		{
-			{ "储物室", SystemTypes.Storage },
+			{ "储藏室", SystemTypes.Storage },
 			{ "厨房", SystemTypes.Kitchen },
 			{ "实验室", SystemTypes.Laboratory },
 			{ "瞭望台", SystemTypes.Lookout },
@@ -106,7 +106,7 @@ namespace HydraMenu
 				MapNames.Polus => polusSabotages,
 				MapNames.Airship => airshipSabotages,
 				MapNames.Fungle => fungleSabotages,
-				// 如果当前地图没有任何破坏，则默认使用 Skeld 的
+				// If we don't have any sabotages for the current map then just default to the Skeld ones
 				_ => skeldSabotages,
 			};
 		}
@@ -127,8 +127,8 @@ namespace HydraMenu
 			};
 		}
 
-		// 我以为也许可以检查 ShipStatus::Systems 是否包含门系统类型的条目
-		// 结果发现 Skeld 即使没有可解锁的门也有门系统类型
+		// I thought that maybe we could check if ShipStatus::Systems included an entry for the doors system type
+		// however it turns out that Skeld has the doors system type even when it doesn't have unlockable doors
 		public static bool CanUnlockDoors()
 		{
 			MapNames map = Utilities.GetCurrentMap();
@@ -176,7 +176,7 @@ namespace HydraMenu
 					break;
 
 				default:
-					Hydra.Log.LogError($"尝试破坏未知系统 {system}");
+					Hydra.Log.LogError($"Attempted to sabotage unknown system {system}");
 					break;
 			}
 
@@ -197,7 +197,7 @@ namespace HydraMenu
 					batch.QueueUpdateSystem(PlayerControl.LocalPlayer, system, 16);
 					break;
 
-				// Comms in Mira HQ and HeliSabotage require two different updates in order to complete
+				// Comms in Mira HQ, and HeliSabotage require two different updates in order to complete
 				case SystemTypes.Comms:
 				case SystemTypes.HeliSabotage:
 					batch.QueueUpdateSystem(PlayerControl.LocalPlayer, system, 16 | 0);
@@ -212,7 +212,7 @@ namespace HydraMenu
 
 					if(amount == 0)
 					{
-						Hydra.Log.LogInfo($"尝试修复灯光，异或操作为 0，无需修复");
+						Hydra.Log.LogInfo($"Attempted to fix lights, XOR operation is 0 so that means we have nothing to fix");
 						break;
 					}
 
@@ -226,7 +226,7 @@ namespace HydraMenu
 				case SystemTypes.MushroomMixupSabotage:
 					if(!AmongUsClient.Instance.AmHost)
 					{
-						Hydra.Log.LogInfo("尝试修复蘑菇混乱，但我们不是房主，无法处理");
+						Hydra.Log.LogInfo("Attempted to fix Mushroom Mixup, we are not the host so nothing can be done");
 						break;
 					}
 
@@ -234,18 +234,18 @@ namespace HydraMenu
 
 					if(!mixupSystem.IsActive)
 					{
-						Hydra.Log.LogInfo("尝试修复蘑菇混乱，破坏未启用，无需修复");
+						Hydra.Log.LogInfo("Attempted to fix Mushroom Mixup, the sabotage is not enabled so we have nothing to fix");
 						break;
 					}
 
-					Hydra.Log.LogInfo("尝试修复蘑菇混乱，我们是房主，可以修复");
+					Hydra.Log.LogInfo("Attempted to fix Mushroom Mixup, we are the host so it can be fixed");
 
 					mixupSystem.currentSecondsUntilHeal = 0.1f;
 					mixupSystem.IsDirty = true;
 					break;
 
 				default:
-					Hydra.Log.LogError($"尝试修复未知破坏系统 {system}");
+					Hydra.Log.LogError($"Attempted to fix unknown sabotage system {system}");
 					break;
 			}
 
@@ -260,7 +260,7 @@ namespace HydraMenu
 			IActivatable activableSystem = systemType.TryCast<IActivatable>();
 			if(activableSystem == null)
 			{
-				Hydra.Log.LogError($"所有破坏类型应继承自 IActivatable，但 {system} 并非如此");
+				Hydra.Log.LogError($"All sabotage types should extend from IActivatable, but yet {system} doesn't");
 				return false;
 			}
 
@@ -323,7 +323,7 @@ namespace HydraMenu
 			}
 			else
 			{
-				Hydra.Log.LogError($"门类型 {doorType.FullName} 未知，无法标记为脏");
+				Hydra.Log.LogError($"Door type {doorType.FullName} is unknown, cannot mark it dirty");
 			}
 		}
 

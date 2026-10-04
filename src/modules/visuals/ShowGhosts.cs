@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class ShowGhosts : Module
 	{
-		public ShowGhosts() : base("显示幽灵")
+		public ShowGhosts() : base("ShowGhosts")
 		{
 			base.Enabled = true;
 		}
@@ -14,9 +14,9 @@ namespace HydraMenu.modules.visuals
 			get { return ModuleManager.showGhosts; }
 		}
 
-		// PlayerControl::FixedUpdate 在玩家死亡时将 PlayerControl::set_Visible 设为 false，存活时设为 true
-		// set_Visible 函数运行 CosmeticsLayer::set_Visible 以隐藏或显示玩家装饰
-		// 如果我们想在存活时也显示幽灵，则可以重新实现 PlayerControl::set_Visible 使玩家装饰始终可见
+		// PlayerControl::FixedUpdate sets PlayerControl::set_Visible to false if the player is dead, or true if the player is alive
+		// The set_Visible function runs CosmeticsLayer::set_Visible in order to hide or show the player's cosmetics
+		// If we want to show ghosts even if we are alive, then we can reimplement PlayerControl::set_Visible and make it so player cosmetics are always visible
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Visible), MethodType.Setter)]
 		class SetVisible
 		{

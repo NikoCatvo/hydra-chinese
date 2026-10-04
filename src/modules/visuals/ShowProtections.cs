@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class ShowProtections : Module
 	{
-		public ShowProtections() : base("显示保护")
+		public ShowProtections() : base("ShowProtections")
 		{
 			base.Enabled = true;
 		}

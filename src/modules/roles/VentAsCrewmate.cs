@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine;
 
 namespace HydraMenu.modules.roles
 {
 	internal class VentAsCrewmate : Module
 	{
-		public VentAsCrewmate() : base("船员进通风管道")
+		public VentAsCrewmate() : base("VentAsCrewmate")
 		{
 			base.Enabled = true;
 		}
@@ -15,8 +15,8 @@ namespace HydraMenu.modules.roles
 			get { return ModuleManager.ventAsCrewmate; }
 		}
 
-		// 类似于船员能使用破坏按钮，通风管道按钮也有检查以确保当前玩家确实能进通风管道，所以我们必须重写 Vent::CanUse 函数
-		// 普通函数也有检查以确保通风管道未被清理，但这不重要，所以我们不重写那些检查
+		// Similar to being able to use the sabotage button while crewmate, the vent button also has checks to make sure the current player can actually vent, so we have to reimplement the Vent::CanUse function
+		// The normal function also has checks to make sure the vent isn't being cleaned, however that isn't important so we don't reimplement those checks
 		[HarmonyPatch(typeof(Vent), nameof(Vent.CanUse))]
 		class SkipVentChecks
 		{

@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.host
 {
 	internal class DisableVentClean : Module
 	{
-		public DisableVentClean() : base("禁用通风管道清理") { }
+		public DisableVentClean() : base("DisableVentClean") { }
 
 		private static DisableVentClean Instance
 		{

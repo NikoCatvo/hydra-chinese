@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
@@ -14,7 +14,7 @@ namespace HydraMenu.anticheat.rpc
 			ClientData clientData = AmongUsClient.Instance.GetClient(player.OwnerId);
 			if(AmongUsClient.Instance.NetworkMode != NetworkModes.LocalGame && requestedName != clientData.PlayerName)
 			{
-				Anticheat.Flag(player, $"{clientData.PlayerName} 请求的名称与其登录握手时的名称不匹配。");
+				Anticheat.Flag(player, $"{clientData.PlayerName} requested a name that does not match their name in the login handshake.");
 				player.SetName(clientData.PlayerName);
 				return false;
 			}
@@ -22,13 +22,13 @@ namespace HydraMenu.anticheat.rpc
 
 			if(requestedName.Length > MAX_NAME_LENGTH)
 			{
-				Anticheat.Flag(player, $"{requestedName} 尝试将名称设置得过长 ({requestedName.Length})。");
+				Anticheat.Flag(player, $"{requestedName} 尝试设置过长的名称（{requestedName.Length} 个字符）。");
 				return false;
 			}
 
 			if(requestedName.Contains('<'))
 			{
-				Anticheat.Flag(player, $"{requestedName} 请求了包含无效字符的名称。");
+				Anticheat.Flag(player, $"{requestedName} 请求设置包含无效字符的名称。");
 				return false;
 			}
 

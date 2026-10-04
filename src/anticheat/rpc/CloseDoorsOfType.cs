@@ -1,15 +1,15 @@
-using Hazel;
+﻿using Hazel;
 using System;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class CloseDoorsOfType : RpcCheck
 	{
-		// 此处 player 为 null，因为我们无法确定是谁发送了此 RPC
+		// Player is null here as we cannot determine who sent this RPC
 		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
-			// 如果我们能添加额外检查会很不错，例如非内鬼关门
-			// 但我们无法确定是谁发送了 CloseDoorsOfType RPC
+			// It would be nice if we could also add additional checks such as someone closing doors without being imposter
+			// however we are not able to determine who sent the CloseDoorsOfType RPC
 			if(GameManager.Instance.IsHideAndSeek())
 			{
 				Anticheat.Flag("有人在躲猫猫模式中尝试关门。");

@@ -1,90 +1,105 @@
-# Hydra2.0（汉化增强版）
+# Hydra 2.1.0 汉化版
+
 <div align="center">
-  <img src="https://github.com/MrDiamond64/Hydra/blob/main/img/main.png?raw=true" alt="Hydra 玩家界面截图"/>
+  <img src="img/main.png" alt="Hydra 玩家界面截图"/>
 </div>
+
+> **汉化 by 微生猫**
 
 Hydra 是一个基于 [BepInEx](https://github.com/BepInEx/BepInEx) 的 Among Us 模组，旨在提升 Among Us 的游戏体验。Hydra 加入了各种便利功能、有趣的整蛊功能，以及一个用于检测房间中作弊玩家的反作弊系统。
 
-> 本版本为**中文汉化增强版**，在原版基础上做了以下改动：
-> - **完整中文汉化**：所有菜单标签、开关、按钮、提示均已翻译为中文
-> - **配置存档系统**：支持保存/读取所有开关状态和滑块数值，进游戏时自动从配置文件加载并生效
-> - **过载攻击功能**（可选）：新增用于测试的过载攻击 section（仅限私人测试服使用）
+本仓库是基于上游 [MrDiamond64/Hydra](https://github.com/MrDiamond64/Hydra) 2.1.0 的**简体中文汉化版本**，在原版基础上做了以下改动：
 
-官方有 Discord 服务器，欢迎加入交流、寻求帮助或提出建议：https://discord.gg/N7azGPHm5F
+- **完整中文汉化**：菜单分区、所有开关/按钮/滑块标签、游戏内通知、反作弊检测提示，以及地图地点、管道、破坏项、任务动画等运行时名称均已翻译为中文
+- **标题栏署名**：菜单标题栏显示「汉化 by 微生猫」
+- **保留原有功能**：配置文件存档、反作弊系统等上游功能均保持不变
+
+原项目 Discord 服务器，欢迎加入交流、寻求帮助或提出建议：https://discord.gg/N7azGPHm5F
 
 # 功能特性
+
+- 无任何 AI 生成代码
 - 游戏内通知
-- 显示幽灵发送的聊天消息（用于管理时判断玩家是否行为公正）
+- 显示幽灵发送的聊天消息（便于管理时判断玩家行为是否公正）
 - 始终显示聊天按钮
 - 作为房主翻转 Skeld 地图
 - 作为房主始终成为内鬼
 - 玩家颜色随机器
 - 传送器
-- 以船员身份破坏和关门
+- 以船员身份进行破坏和关门
 - 设备与版本伪装器
 - 查看其他玩家的身份
 - [无需房主权限即可将玩家踢出房间](https://streamable.com/wtb7jl)
-- [无敌模式](https://streamable.com/k1b0m0)
-- [可配置的反作弊系统，检测常见外挂和漏洞利用](#hydra-反作弊)
+- [成为无敌状态](https://streamable.com/k1b0m0)
+- [可配置的反作弊系统，检测常见外挂与漏洞利用](#hydra-反作弊)
 - 更多功能！
 
-## 汉化增强版新增功能
-- **中文界面**：13 个功能分区（综合、自身、整蛊、破坏、房主、移动、玩家、身份、防护、视觉、伪装、反作弊、菜单）全部汉化
-- **配置存档**：在"菜单"分区提供 4 个配置管理按钮
-  - 保存到配置
-  - 从配置载入
-  - 重新载入配置
-  - 打开配置文件夹
-- **自动加载**：进入游戏时会自动从 `BepInEx/config/HydraProfile.txt` 读取并套用所有开关和滑块设置，无需手动打开菜单
-- **可保存的设置项**：所有 bool 开关、菜单不透明度、界面缩放、主色调、速度倍率、反作弊惩罚方式、各类延迟滑块、等级/版本/平台伪装值等
-
 # Hydra 反作弊
-Hydra 反作弊可以说是本模组的核心。它能够检测玩家的作弊行为，例如在没有相应身份的情况下进入通风口，或试图在地图上随意传送。检测到作弊者后，Hydra 可以自动将该玩家踢出房间。你无需成为房主即可使用 Hydra 反作弊——非房主状态下使用时，它只会向你发送通知而不会踢出玩家。Hydra 反作弊旨在扩展原版 Among Us 的反作弊，为其当前无法检测的作弊行为添加检查项。只要服务器满足基本要求，它也可用于反作弊较宽松的自定义 Among Us 服务器。
 
-Hydra 反作弊有一个基本要求：后端服务器必须能够阻止玩家身份冒充。如果作弊者能够以其他玩家的名义发送 RPC，那么 Hydra 反作弊将无法准确判断谁在作弊，并可能标记错误的玩家。原版 Among Us 服务器已经内置了冒充检查，因此在官方服务器上无需担心这一点。
+Hydra 反作弊可以说是本模组的核心。它能检测玩家何时尝试作弊，例如在没有对应身份的情况下钻管道，或在地图中瞬移。检测到作弊者后，Hydra 可以自动将该玩家从房间中封禁。
+
+你**不需要是房主**也可以使用 Hydra 反作弊：非房主时它只会向你发送通知，而不会封禁该玩家。Hydra 反作弊的目标是补充原版 Among Us 反作弊的不足，为其尚未检测的作弊手段增加检查；只要服务器满足一个基本前提，它也可以用在自定义 Among Us 服务器上。
+
+这个基本前提是：后端服务器必须能够阻止玩家冒充他人。如果作弊者能够以其他玩家的名义发送 RPC，那么 Hydra 反作弊将无法准确判断到底是谁在作弊，可能会误判。原版 Among Us 服务器本身就带有冒充检查，因此在官方服务器中通常不必担心这一点。
 
 # 安装与使用
+
 > [!WARNING]
-> 使用 Hydra 之前，请务必理解并完全同意[免责声明](#免责声明)部分中提供的警告。
+> 使用 Hydra 前，请务必理解并完全同意下方[免责声明](#免责声明)中的警告。
 
 ## 安装 BepInEx
-[BepInEx](https://github.com/bepinex/bepinex) 是一个允许为 Unity 游戏创建模组的模组框架。Among Us 使用 Unity 作为游戏引擎，因此 Hydra 使用 BepInEx 框架来修改游戏。在下载 Hydra 之前，你需要先安装 BepInEx。BepInEx 有多个版本，我们需要的是 **il2cpp 版本**，因为 Among Us 使用 il2cpp 编译器以实现跨平台兼容。你可以从 [Releases](https://github.com/MrDiamond64/Hydra/releases) 页面下载 BepInEx，也可以从 [BepInEx 官网](https://builds.bepinex.dev/projects/bepinex_be) 获取。
 
-注意 BepInEx Il2Cpp 有两种架构：x86 和 x64。这很重要，因为 Among Us 可能是 32 位或 64 位，取决于你从哪里下载的。**BepInEx 的架构必须与你的 Among Us 安装版本匹配**。一般规律：微软商店和 Epic Games 提供 x64 版本，Steam 和 Itch.io 提供 x86 版本。如果仍不确定，可以按 `Ctrl` + `Shift` + `Esc` 打开任务管理器，在运行进程列表中找到 Among Us，如果显示 "Among Us.exe (32-bit)" 则为 32 位版本，否则为 64 位版本。
+[BepInEx](https://github.com/bepinex/bepinex) 是一个为 Unity 游戏制作模组的框架。Among Us 使用 Unity 引擎，因此 Hydra 通过 BepInEx 来修改游戏。在安装 Hydra 之前，你需要先安装 BepInEx。
 
-下载好与你的 Among Us 版本匹配的 BepInEx 后，打开 Among Us 安装目录（即 `Among Us.exe` 和 `GameAssembly.dll` 所在位置），将 BepInEx 的内容解压到该目录。在 `Among Us.exe` 旁边，你应该能看到 `winhttp.dll`、`BepInEx`、`dotnet` 等新文件和文件夹。如果没看到，可能是解压软件把它们放进了单独的文件夹，此时打开那个新文件夹，把里面所有内容拖到 `Among Us.exe` 所在的目录即可。如果一切正确，BepInEx 就安装完成，可以下载 Hydra 了。
+BepInEx 有多个版本，我们需要 **Il2Cpp 版本**，因为 Among Us 使用 Il2Cpp 编译器以实现跨平台兼容。你可以从本仓库的 Releases 页面下载，也可以从 [BepInEx 官网](https://builds.bepinex.dev/projects/bepinex_be)获取。
 
-## 安装 Hydra
-下载 Hydra 只需前往 [Releases]((https://github.com/NikoCatvo/hydra-chinese/releases)) 页面，下载 `HydraMenu.dll` 文件，然后将其复制粘贴到 `./BepInEx/plugins/` 目录中。
+请注意 BepInEx Il2Cpp 分为 x86 和 x64 两种架构，这很重要：Among Us 本身可能是 32 位或 64 位，取决于你的下载来源，**BepInEx 的架构必须与你的 Among Us 一致**。一般规律是：Steam、Microsoft Store、Epic Games 提供的是 x64 版本，Itch.io 提供的是 x86 版本。如果不确定，可以按 `Ctrl` + `Shift` + `Esc` 打开任务管理器，在进程列表中找到 Among Us，看是否显示「Among Us.exe (32 位)」：显示则是 32 位，否则为 64 位。
 
-> **汉化增强版用户**：请使用本项目自行编译的 `HydraMenu.dll` 覆盖官方版本。若使用了自动更新或重新安装了官方版本，汉化和自定义功能将失效，需要重新编译。
+下载好对应架构的 BepInEx 后，打开你的 Among Us 安装目录（即 `Among Us.exe` 和 `GameAssembly.dll` 所在目录），把 BepInEx 的内容解压进去。解压后，除了 `Among Us.exe`，你应当还能看到 `winhttp.dll`、`BepInEx`、`dotnet` 等新文件和文件夹。如果没看到，说明解压程序把它们放进了单独的子文件夹，请打开该文件夹，把所有内容拖到 `Among Us.exe` 所在的同一目录。一切正确的话，BepInEx 就安装完成了。
 
-完成后即可打开 Among Us。首次安装 BepInEx 后启动 Among Us 会与平常不同，启动时间可能较长，并会出现一个终端窗口。这是完全正常的，启动延迟是 BepInEx 预加载流程的一部分。后续启动 Among Us 将不再有此延迟。稍等片刻后，Among Us 应该会打开，屏幕右上角会出现一个模组图标，此时 Hydra 已就绪，你可以开始尽情使用了！
+## 安装 Hydra 汉化版
+
+1. 前往本仓库右侧的 [Releases](https://github.com/NikoCatvo/hydra-chinese/releases) 页面
+2. 下载最新版本的 `HydraMenu.dll`
+3. 把它复制粘贴到 `./BepInEx/plugins/` 目录（**替换同名文件，不要同时保留两份**）
+4. 启动 Among Us
+
+首次安装 BepInEx 后启动 Among Us 会与平时不同：启动可能明显变慢，并会出现一个终端窗口。这是完全正常的，属于 BepInEx 的预检流程，之后的启动不会再有这个延迟。稍等片刻后 Among Us 会打开，屏幕右上角应出现一个模组图标，此时 Hydra 汉化版就已经就绪了。
 
 ## 使用 Hydra
-按键盘上的 `Insert` 键即可打开 Hydra 界面。视你的键盘而定，可能需要切换 Num Lock 或同时按功能键（Fn）才能弹出菜单。按下 Insert 后，你会看到 Hydra 界面。界面分为多个部分：分区栏和功能栏。分区栏包含 `自身`、`房主`、`反作弊` 等标签页，点击任意标签会在功能栏显示该分区的功能。功能栏中包含滑块、按钮和复选框，用于配置 Hydra。
 
-> **配置存档使用说明**：
-> 1. 在菜单中调整好各项开关和滑块后，进入"菜单"分区，点击"保存到配置"
-> 2. 设置会写入 `BepInEx/config/HydraProfile.txt`
-> 3. 下次进入游戏时会自动读取并套用，无需再打开菜单
-> 4. 也可直接编辑该 txt 文件（关闭游戏状态下），格式为 `键名 = 值`
+按键盘上的 `Insert` 键即可打开/关闭 Hydra 界面。根据你的键盘，可能需要切换 Num Lock，或配合 Fn 键一起按。
 
-# 开发计划（TODO）
-- [ ] 为反作弊添加更多检查项（如以船员身份破坏）
-- [x] 为 UI 分区添加滚动条
-- [x] 在玩家 UI 分区显示玩家身份和颜色
-- [ ] 探索反作弊较宽松的模组版原版协议
-- [x] 可保存的配置（**已由汉化增强版实现**）
+Hydra 界面分为两部分：**分区栏**和**功能栏**。分区栏列出了诸如「自身」「房主」「反作弊」等标签页，点击任意一个标签，功能栏就会显示该分区的功能。功能栏中包含滑块、按钮和开关，可以用来配置 Hydra。
+
+在「菜单」分区中，可以设置主题色、菜单不透明度、界面缩放，以及保存/加载配置文件。
+
+# 从源码构建
+
+需要 .NET 6（或更高版本）SDK，以及可访问 NuGet 的网络环境：
+
+```bash
+cd src
+dotnet restore
+dotnet build -c Release
+```
+
+产物位于 `src/bin/Release/net6.0/HydraMenu.dll`。由于项目依赖 `AmongUs.GameLibs.Steam`，需要能够访问项目内配置的 NuGet 源。
 
 # 免责声明
+
 > [!CAUTION]
-> **在任何情况下都绝不应使用 Hydra 来损害其他玩家的游戏体验。如果你使用某些整蛊功能，请确保是在获得同意的玩家所在的私人房间中进行。只要你使用 Hydra 的目的是改善自己的 Among Us 游戏体验，你完全可以带着 Hydra 加入公共房间。能力越大，责任越大！**
+> **Hydra 在任何情况下都绝不应被用于破坏其他玩家的游戏体验。如果你使用了部分整蛊功能，请确保是在私人房间中，并且获得了在场玩家的同意。只要你抱着改善游戏体验的目的，你完全可以在公开房间中启用 Hydra。能力越大，责任越大！**
 
-我意识到，像 Hydra 这样的实用模组会给恶意用户在房间里搞破坏打开方便之门。我已尽力通过从公开版本中移除强大且易被滥用的功能、并添加防护措施来限制滥用的可能性。即便有这些保护，仍然存在被滥用和进行恶意活动的风险。我所能做的，就是请你——Hydra 的使用者——不要将 Hydra 用于恶意目的，并遵守 [Innersloth 行为准则](https://www.innersloth.com/code-of-conduct/) 以及你所在房间设定的规则。请仅将其用于检测公共房间中的作弊者，或在其他人都同意使用 Hydra 高级功能的场合下使用。
+我认识到，像 Hydra 这样的工具型模组会为恶意用户在房间里搞破坏打开大门。我已经通过移除公开版本中威力过大、容易被滥用的功能，并加入限制滥用的保护措施来降低风险。即便有这些保护，滥用和恶意行为仍有可能发生。我能做的只是请求你——正在使用 Hydra 的人——不要将 Hydra 用于恶意目的，并遵守 [Innersloth 行为准则](https://www.innersloth.com/code-of-conduct/)以及你所在房间的规则。请只用它来在公开房间中检测作弊者，或在所有人都同意的情况下使用 Hydra 的进阶功能。
 
-如果你不遵守我的建议，那么请不要指望从我这里获得任何形式的支持或责任担保。你的账号也可能被 Innersloth 处以封禁，导致你失去 Among Us 账号以及与之关联的所有数据，例如好友列表、已解锁的外观、购买记录、豆子和金币等。
+如果你不听从我的建议，那么不要指望从我这里获得任何形式的支持或承担任何责任。你的账号也可能会被 Innersloth 处以制裁，你将失去你的 Among Us 账号以及与之关联的所有数据，例如好友列表、已解锁的装饰、已购内容、豆子和金币等。
 
-> **汉化增强版补充警告**：本版本新增的"过载攻击"功能属于恶意破坏性功能，**仅供在你自己拥有的私人测试服务器上进行技术研究**。请勿在公共房间或他人房间中使用，否则可能导致账号被永久封禁。使用本版本的一切后果由使用者自行承担。
+本模组与 Among Us 或 Innersloth LLC 无关，其中所含内容不由 Innersloth LLC 认可或赞助。本文所含部分素材为 Innersloth LLC 的财产。© Innersloth LLC。
 
-本模组与 Among Us 或 Innersloth LLC 无关联，其包含的内容未经 Innersloth LLC 认可或赞助。本文所含部分素材归 Innersloth LLC 所有。© Innersloth LLC。
+# 许可协议
+
+本仓库沿用上游 Hydra 的许可协议：**GNU General Public License v3.0**（详见 [LICENSE](LICENSE)）。
+
+- 上游项目：[MrDiamond64/Hydra](https://github.com/MrDiamond64/Hydra)
+- 汉化：微生猫

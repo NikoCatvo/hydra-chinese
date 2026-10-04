@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
@@ -10,19 +10,19 @@ namespace HydraMenu.anticheat.rpc
 
 			if(LobbyBehaviour.Instance)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在大厅内发送了任务 {animation} 的 PlayAnimation RPC。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在大厅内发送了任务 {HydraMenu.ui.Lang.Tr(animation)} 的 PlayAnimation RPC。");
 				return false;
 			}
 
 			if(RoleManager.IsImpostorRole(player.Data.RoleType))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 作为内鬼时发送了任务 {animation} 的 PlayAnimation RPC。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 身为内鬼，却发送了任务 {HydraMenu.ui.Lang.Tr(animation)} 的 PlayAnimation RPC。");
 				return false;
 			}
 
 			if(!GameManager.Instance.LogicOptions.GetVisualTasks())
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在可视化任务关闭时发送了任务 {animation} 的 PlayAnimation RPC。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在可视任务已关闭时发送了任务 {HydraMenu.ui.Lang.Tr(animation)} 的 PlayAnimation RPC。");
 				return false;
 			}
 

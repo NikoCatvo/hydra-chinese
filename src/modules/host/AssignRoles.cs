@@ -1,4 +1,4 @@
-using AmongUs.GameOptions;
+﻿using AmongUs.GameOptions;
 using HarmonyLib;
 using Il2CppSystem.Collections.Generic;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.modules.host
 {
 	internal class AssignRoles : Module
 	{
-		public AssignRoles() : base("分配角色") { }
+		public AssignRoles() : base("AssignRoles") { }
 
 		private static AssignRoles Instance
 		{
@@ -18,48 +18,48 @@ namespace HydraMenu.modules.host
 		[HarmonyPatch(typeof(LogicRoleSelectionNormal), nameof(LogicRoleSelectionNormal.AssignRolesFromList))]
 		class AlwaysImposter
 		{
-			// 确保从 Il2CppSystem 导入 List<T>，否则会出大问题！
+			// Make sure List<T> is imported from Il2CppSystem otherwise things will go terribly wrong!
 			static void Prefix(ref List<NetworkedPlayerInfo> players, ref List<RoleTypes> roleList, ref int rolesAssigned)
 			{
 				if(!Instance.Enabled || !AmongUsClient.Instance.AmHost) return;
 
 				RoleTypes assignedRole = Instance.AssignedRole;
-				Hydra.Log.LogInfo($"尝试为自己分配 {assignedRole} 角色");
+				Hydra.Log.LogInfo($"Attempting to assign ourselves the {assignedRole} role");
 
-				// 处理 IL2Cpp 互操作的愚蠢把戏
+				// Stupid shenanigans to deal with IL2Cpp interop
 				Il2CppSystem.Predicate<NetworkedPlayerInfo> predicate = (Il2CppSystem.Predicate<NetworkedPlayerInfo>)(player => player == PlayerControl.LocalPlayer.Data);
 				int playerIndex = players.FindIndex(predicate);
 
-				// AssignRolesFromList 函数会被多次调用，每次传入不同的玩家列表
-				// 如果我们的 NetworkedPlayerInfo 不在此玩家列表中，则不应立即分配角色
+				// The AssignRolesFromList function is called multiple times each with different list of players
+				// If our NetworkedPlayerInfo does not exist in this playerlist, then we shouldn't assign our role now
 				if(playerIndex == -1)
 				{
-					Hydra.Log.LogInfo("我们的 NetworkedPlayerInfo 不在此列表中，跳过");
+					Hydra.Log.LogInfo("Our NetworkedPlayerInfo does not exist in this list, skipping");
 					return;
 				}
 
-				Hydra.Log.LogInfo($"在玩家列表索引 {playerIndex} 处找到我们的 NetworkedPlayerInfo，从列表中移除");
+				Hydra.Log.LogInfo($"Found our NetworkedPlayerInfo in the players list at index {playerIndex}, removing from the list");
 				players.RemoveAt(playerIndex);
 
 				Il2CppSystem.Predicate<RoleTypes> predicate2 = (Il2CppSystem.Predicate<RoleTypes>)(roleType => roleType == assignedRole);
 				int roleIndex = roleList.FindIndex(predicate2);
 
-				Hydra.Log.LogMessage($"玩家索引为 {roleIndex}");
+				Hydra.Log.LogMessage($"Player index is {roleIndex}");
 
-				// 如果我们想分配给自己的角色存在于 roleList 中，则将其移除
-				// 我们不想在打算有三个内鬼时游戏里出现四个内鬼
+				// If the role we want to assign ourselves exists in the roleList, then remove it
+				// We don't want there to be four imposters in the game when we intend for three imposters
 				if(roleIndex != -1)
 				{
-					Hydra.Log.LogInfo($"在角色列表索引 {roleIndex} 处找到我们角色的实例，从列表中移除");
+					Hydra.Log.LogInfo($"Found an instance of our role in the roles list at index {roleIndex}, removing from the list");
 					roleList.RemoveAt(roleIndex);
 				}
 
-				// 为决定是否播放开场过场动画，游戏会等待 SetRole RPC，检查分配的角色是否非幽灵角色，
-				// 然后检查所有玩家是否都已分配角色或已断开连接
-				// 问题在于如果我们试图给自己分配幽灵角色，且我们是最后一个被分配角色的玩家
-				// 则 PlayerControl::CoSetRole 执行流不会显示开场过场动画
-				// 导致整个大厅遇到黑屏
-				// 为绕过此问题，我们检查此边缘情况，先给自己分配非房主角色，再将角色设为幽灵角色
+				// To determine if the intro cutscene should play, the game waits for SetRole RPCs, checks if the assigned role is not a ghost role,
+				// and then checks if all players have either been assigned a role or were disconnected
+				// The problem is that if we are trying to assign ourselves a ghost role, and we are the last player to be assigned a role
+				// then the PlayerControl::CoSetRole execution flow will not display the intro cutscene
+				// resulting in the entire lobby encountering a black screen
+				// To get around this, we check for this edge case and assign ourselves a non-host role, and then set our role to a ghost role
 				if(RoleManager.IsGhostRole(assignedRole) && players.Count == 0)
 				{
 					PlayerControl.LocalPlayer.RpcSetRole(RoleManager.IsImpostorRole(assignedRole) ? RoleTypes.Impostor : RoleTypes.Crewmate);
@@ -68,16 +68,16 @@ namespace HydraMenu.modules.host
 				PlayerControl.LocalPlayer.RpcSetRole(assignedRole);
 				rolesAssigned++;
 
-				Hydra.Log.LogInfo($"已为自己分配 {assignedRole} 角色!");
+				Hydra.Log.LogInfo($"Assigned ourself the {assignedRole} role!");
 			}
 		}
 
 		private void OnGameStart()
 		{
 			if(AmongUsClient.Instance.AmHost || Utilities.IsAnticheatPresent()) return;
-			Hydra.Log.LogMessage($"我们处于房主主导的大厅，可以劫持分配的角色");
+			Hydra.Log.LogMessage($"We are in a host-authoritative lobby, we can hijack the assigned roles");
 
-			// 如果我们在躲猫猫模式中，可以给所有人分配工程师角色，这样房主就不会分配第二个内鬼
+			// If we are in Hide and Seek, we can assign everyone the Engineer role so the host doesn't assign a second impostor
 			if(GameManager.Instance.IsHideAndSeek() && RoleManager.IsImpostorRole(AssignedRole))
 			{
 				foreach(PlayerControl player in PlayerControl.AllPlayerControls)

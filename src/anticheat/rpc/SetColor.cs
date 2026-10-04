@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
@@ -9,17 +9,17 @@ namespace HydraMenu.anticheat.rpc
 			uint netId = reader.ReadUInt32();
 			byte color = reader.ReadByte();
 
-			// RPC 中写入的这个 net id 字段看似毫无用处，因为客户端 RPC 处理程序不使用此值
+			// This net id field written in the RPC is seemingly useless as the client RPC handler does not do anything with this value
 			if(netId != player.Data.NetId)
 			{
-				Anticheat.Flag(player, $"为 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效网络 ID，预期 {player.Data.NetId}，收到 {netId}", false);
+				Anticheat.Flag(player, $"针对 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效的网络 ID：预期 {player.Data.NetId}，收到 {netId}", false);
 				player.SetColor((byte)CrewmateColor.Red);
 				return false;
 			}
 
 			if(color >= Palette.ColorNames.Length)
 			{
-				Anticheat.Flag(player, $"为 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效颜色: {color}", false);
+				Anticheat.Flag(player, $"针对 {player.Data.PlayerName} 发送的 SetColor RPC 包含无效的颜色值：{color}", false);
 				player.SetColor((byte)CrewmateColor.Red);
 				return false;
 			}

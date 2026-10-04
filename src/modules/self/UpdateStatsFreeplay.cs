@@ -1,11 +1,11 @@
-using AmongUs.Data.Player;
+﻿using AmongUs.Data.Player;
 using HarmonyLib;
 
 namespace HydraMenu.modules.self
 {
 	internal class UpdateStatsFreeplay : Module
 	{
-		public UpdateStatsFreeplay() : base("自由模式更新统计") { }
+		public UpdateStatsFreeplay() : base("UpdateStatsFreeplay") { }
 
 		private static UpdateStatsFreeplay Instance
 		{

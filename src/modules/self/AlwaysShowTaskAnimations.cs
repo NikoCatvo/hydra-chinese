@@ -1,15 +1,15 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using HydraMenu.network;
 
 namespace HydraMenu.modules.self
 {
 	internal class AlwaysShowTaskAnimations : Module
 	{
-		// 当调用 PlayerControl::RpcPlayAnimation 或 PlayerControl::RpcSetScanner 时，它们会在发送 RPC 前检查可视化任务是否开启
-		// 如果我们想在可视化任务关闭时也能发送这些 RPC，则需要重新实现这些函数
-		// 我们本可以只打补丁 LogicOptionsNormal::GetVisualTasks 和 LogicOptionsHnS::GetVisualTasks，但后者被 Il2Cpp 编译器优化掉了，所以补丁实际上不会生效
-		// 这意味着这只会在普通游戏中显示任务动画，而不适用于躲猫猫模式
-		public AlwaysShowTaskAnimations() : base("始终显示任务动画") { }
+		// When PlayerControl::RpcPlayAnimation or PlayerControl::RpcSetScanner is called, they check if visual tasks are on before sending the RPC
+		// If we want to be able to send those RPCs even with visual tasks are off, then we will need to reimplement those functions
+		// We could just patch LogicOptionsNormal::GetVisualTasks and LogicOptionsHnS::GetVisualTasks, however the latter is optimized out by the Il2Cpp compiler so our patch won't actually get applied
+		// meaning this will only show task animations on normal games and not hide and seek as well
+		public AlwaysShowTaskAnimations() : base("AlwaysShowTaskAnimations") { }
 
 		private static AlwaysShowTaskAnimations Instance
 		{
@@ -23,7 +23,9 @@ namespace HydraMenu.modules.self
 			{
 				if(!Instance.Enabled || __instance != PlayerControl.LocalPlayer) return true;
 
-				RPCEmitter.SendSetScanner(value);
+				BatchedMessage batch = new BatchedMessage();
+				batch.QueueSetScanner(__instance, value);
+				batch.FinishBatch();
 				return false;
 			}
 		}

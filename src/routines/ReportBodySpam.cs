@@ -1,11 +1,11 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using UnityEngine;
 
 namespace HydraMenu.routines
 {
 	public class ReportBodySpam : Routine
 	{
-		public ReportBodySpam() : base("刷报尸体") { }
+		public ReportBodySpam() : base("ReportBodySpam") { }
 
 		public readonly float REPORT_DELAY = 2.5f;
 		private float timeElapsed = 0f;
@@ -30,7 +30,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("刷报尸体", "你离开了游戏，刷报尸体已禁用。", 10);
+			Hydra.notifications.Send("报告尸体刷屏", "报告尸体刷屏已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -38,14 +38,14 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("刷报尸体", "游戏开始后刷报尸体才能使用。", 10);
+				Hydra.notifications.Send("报告尸体刷屏", "报告尸体刷屏只能在游戏开始后使用。", 10);
 				Enabled = false;
 				return;
 			}
 
 			if(!AmongUsClient.Instance.AmHost)
 			{
-				Hydra.notifications.Send("刷报尸体", "刷报尸体仅可由大厅房主使用。", 10);
+				Hydra.notifications.Send("报告尸体刷屏", "报告尸体刷屏仅限房间房主使用。", 10);
 				Enabled = false;
 				return;
 			}

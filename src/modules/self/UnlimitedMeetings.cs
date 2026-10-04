@@ -1,10 +1,10 @@
-using Il2CppInterop.Runtime;
+﻿using Il2CppInterop.Runtime;
 
 namespace HydraMenu.modules.self
 {
 	internal class UnlimitedMeetings : Module
 	{
-		public UnlimitedMeetings() : base("无限会议")
+		public UnlimitedMeetings() : base("UnlimitedMeetings")
 		{
 			base.Enabled = true;
 		}

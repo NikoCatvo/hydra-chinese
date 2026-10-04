@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
@@ -11,7 +11,7 @@ namespace HydraMenu.ui.sections
 		{
 			if(ShipStatus.Instance == null)
 			{
-				GUILayout.Label("你当前不在游戏中，或游戏尚未开始。这些选项将无法使用。");
+				GUILayout.Label("你当前不在对局中，或游戏尚未开始。这些选项将无法使用。");
 			}
 
 			Sabotage.UpdateSystemsDirectly = GUILayout.Toggle(Sabotage.UpdateSystemsDirectly, "直接更新破坏系统");
@@ -20,7 +20,7 @@ namespace HydraMenu.ui.sections
 			Dictionary<string, SystemTypes> doors = Sabotage.GetDoors();
 
 			GUILayout.BeginHorizontal();
-			if(GUILayout.Button("破坏所有"))
+			if(GUILayout.Button("全部破坏"))
 			{
 				Sabotage.SabotageAll();
 				Hydra.notifications.Send("破坏", "所有破坏已启用。", 5);
@@ -49,13 +49,13 @@ namespace HydraMenu.ui.sections
 				}
 				else
 				{
-					Hydra.notifications.Send("破坏", "当前地图不支持解锁门。", 10);
+					Hydra.notifications.Send("破坏", "你当前所在的地图不支持解锁门。", 10);
 				}
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.Space(5);
-			GUILayout.Label("破坏项目:");
+			GUILayout.Label("破坏项：");
 			foreach(var (key, value) in sabotages)
 			{
 				if(GUILayout.Button(key))
@@ -64,10 +64,10 @@ namespace HydraMenu.ui.sections
 				}
 			}
 
-			GUILayout.Label("关闭门:");
+			GUILayout.Label("关门：");
 			if(doors.Count == 0)
 			{
-				GUILayout.Label("当前地图没有可关闭的门。");
+				GUILayout.Label("该地图没有可以关闭的门。");
 			}
 			else
 			{
@@ -79,13 +79,13 @@ namespace HydraMenu.ui.sections
 		{
 			if(PlayerControl.LocalPlayer == null)
 			{
-				Hydra.notifications.Send("破坏", "此选项只能在游戏中使用。");
+				Hydra.notifications.Send("破坏", "该选项只能在游戏中使用。");
 				return;
 			}
 
 			if(ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("破坏", "必须存在 ShipStatus 实例才能使用此功能。");
+				Hydra.notifications.Send("破坏", "需要存在 ShipStatus 实例，该功能才能生效。");
 				return;
 			}
 
@@ -94,12 +94,12 @@ namespace HydraMenu.ui.sections
 			if(currentEvent.button == 0)
 			{
 				Sabotage.SabotageSystem(system);
-				Hydra.notifications.Send("破坏", $"{system} 已被破坏。", 5);
+				Hydra.notifications.Send("破坏", $"{Lang.Tr(system)} 已被破坏。", 5);
 			}
 			else if(currentEvent.button == 1)
 			{
 				Sabotage.FixSabotage(system);
-				Hydra.notifications.Send("破坏", $"{system} 已被修复。", 5);
+				Hydra.notifications.Send("破坏", $"{Lang.Tr(system)} 已被修复。", 5);
 			}
 		}
 
@@ -107,13 +107,13 @@ namespace HydraMenu.ui.sections
 		{
 			if(PlayerControl.LocalPlayer == null)
 			{
-				Hydra.notifications.Send("破坏", "此选项只能在游戏中使用。");
+				Hydra.notifications.Send("破坏", "该选项只能在游戏中使用。");
 				return;
 			}
 
 			if(ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("破坏", "必须存在 ShipStatus 实例才能使用此功能。");
+				Hydra.notifications.Send("破坏", "需要存在 ShipStatus 实例，该功能才能生效。");
 				return;
 			}
 
@@ -127,7 +127,7 @@ namespace HydraMenu.ui.sections
 
 			if(!Sabotage.CanUnlockDoors())
 			{
-				Hydra.notifications.Send("破坏", "只有房主或在 Polus、Airship、Fungle 地图上才能解锁门。");
+				Hydra.notifications.Send("破坏", "只有房主，或地图为波拉斯、飞艇、真菌丛林时才能解锁门。");
 				return;
 			}
 

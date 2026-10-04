@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using UnityEngine;
 
@@ -12,16 +12,16 @@ namespace HydraMenu.ui.sections
 
 		public override void Render()
 		{
-			// GUILayout.Label($"纹理 2D 内存使用量: {Texture2D.currentTextureMemory}");
+			// GUILayout.Label($"Texture 2D memory usage: {Texture2D.currentTextureMemory}");
 			Hydra.notifications.disableNotifications = GUILayout.Toggle(Hydra.notifications.disableNotifications, "禁用通知");
 
-			GUILayout.Label($"主色: {Styles.primaryColor}");
+			GUILayout.Label($"主题色：{Lang.Tr(Styles.primaryColor)}");
 			Styles.primaryColor = (Styles.UIColors)GUILayout.HorizontalSlider((float)Styles.primaryColor, 0, Styles.ColorValues.Count - 1);
 
-			GUILayout.Label($"菜单不透明度: {Styles.menuOpacity * 100:F0}%");
+			GUILayout.Label($"菜单不透明度：{Styles.menuOpacity * 100:F0}%");
 			Styles.menuOpacity = (float)Math.Round(GUILayout.HorizontalSlider(Styles.menuOpacity, 0, 1), 4);
 
-			GUILayout.Label($"UI 缩放: {MainUI.scale:F2}倍");
+			GUILayout.Label($"界面缩放：{MainUI.scale:F2}x");
 			MainUI.scale = (float)Math.Round(GUILayout.HorizontalSlider(MainUI.scale, 0.5f, 2.0f), 2);
 
 			if(GUILayout.Button("应用更改"))
@@ -35,9 +35,9 @@ namespace HydraMenu.ui.sections
 			}
 
 			GUILayout.Space(5);
-			GUILayout.Label($"配置:\n当前配置: {Hydra.config.currentConfig}");
+			GUILayout.Label($"配置：\n当前配置：{Hydra.config.currentConfig}");
 
-			GUILayout.Label($"选中配置: {Hydra.config.configList[configIndex]}");
+			GUILayout.Label($"已选配置：{Hydra.config.configList[configIndex]}");
 			configIndex = (byte)GUILayout.HorizontalSlider(configIndex, 0, Hydra.config.configList.Count - 1);
 
 			GUILayout.BeginHorizontal();
@@ -56,10 +56,10 @@ namespace HydraMenu.ui.sections
 			if(GUILayout.Button("新建配置"))
 			{
 				string configName = Hydra.config.GetUnusedConfigName();
-				// 我怀疑真的会有人创建 255 个符合 "Hydra [1-255]" 模式的配置，但以防万一...
+				// I doubt anyone will actually have 255 configs with the pattern of "Hydra [1-255]", but just in case...
 				if(configName == null)
 				{
-					Hydra.notifications.Send("配置", "找不到未使用的配置名称。");
+					Hydra.notifications.Send("配置", "未能找到未使用的配置名称。");
 					return;
 				}
 

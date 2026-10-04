@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.protections
 {
 	internal class BlockServerTeleports : Module
 	{
-		public BlockServerTeleports() : base("阻止服务器传送")
+		public BlockServerTeleports() : base("BlockServerTeleports")
 		{
 			base.Enabled = true;
 		}
@@ -21,7 +21,7 @@ namespace HydraMenu.modules.protections
 			{
 				if(!Instance.Enabled || callId != (byte)RpcCalls.SnapTo || __instance.myPlayer != PlayerControl.LocalPlayer) return true;
 
-				Hydra.Log.LogMessage($"收到针对我们玩家的 SnapTo RPC，由于已启用阻止服务器传送，将忽略此 RPC");
+				Hydra.Log.LogMessage($"Received SnapTo RPC for our player, since block server teleports is enabled we will disregard the RPC");
 				return false;
 			}
 		}

@@ -1,11 +1,11 @@
-using AmongUs.Data.Player;
+﻿using AmongUs.Data.Player;
 using HarmonyLib;
 
 namespace HydraMenu.modules.protections
 {
 	internal class BypassDisconnectPenalty : Module
 	{
-		public BypassDisconnectPenalty() : base("绕过断开惩罚")
+		public BypassDisconnectPenalty() : base("BypassDisconnectPenalty")
 		{
 			base.Enabled = true;
 		}
@@ -15,9 +15,9 @@ namespace HydraMenu.modules.protections
 			get { return ModuleManager.bypassDisconnectPenalty; }
 		}
 
-		// 开发此模块略有难度，因为许多封禁积分处理都在小的 getter 函数中
-		// 这些大多被 Il2Cpp 编译器内联了
-		// 我在 IDA 中查看了 GameAssembly.dll 文件，PlayerBanData::get_BanMinutesLeft 是少数未被内联的函数
+		// Developing this module was slightly difficult, as a lot of the ban points handling are in small getter functions
+		// which mostly all get inlined by the Il2Cpp compiler
+		// I looked through the GameAssembly.dll file in IDA and PlayerBanData::get_BanMinutesLeft was the few functions not inlined
 		[HarmonyPatch(typeof(PlayerBanData), nameof(PlayerBanData.BanMinutesLeft), MethodType.Getter)]
 		class GetBanMinutes
 		{

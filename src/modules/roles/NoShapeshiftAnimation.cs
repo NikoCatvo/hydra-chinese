@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.roles
 {
 	internal class NoShapeshiftAnimation : Module
 	{
-		public NoShapeshiftAnimation() : base("无变身动画") { }
+		public NoShapeshiftAnimation() : base("NoShapeshiftAnimation") { }
 
 		private static NoShapeshiftAnimation Instance
 		{
@@ -22,8 +22,8 @@ namespace HydraMenu.modules.roles
 			}
 		}
 
-		// PlayerControl::CmdCheckRevertShapeshift 调用我们上面打补丁的 PlayerControl::CmdCheckShapeshift 函数，但该函数被内联了
-		// 所以我们也必须给 PlayerControl::CmdCheckRevertShapeshift 打补丁
+		// PlayerControl::CmdCheckRevertShapeshift calls the PlayerControl::CmdCheckShapeshift function which we patch above, however the function is inlined
+		// so we have to patch PlayerControl::CmdCheckRevertShapeshift as well
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckRevertShapeshift))]
 		class RevertShapeshift
 		{

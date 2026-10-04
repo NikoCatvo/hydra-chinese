@@ -1,20 +1,20 @@
-using Hazel;
+﻿using Hazel;
+using HydraMenu.network;
 using Il2CppInterop.Runtime;
 using InnerNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static HydraMenu.network.Constants;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class UpdateSystem : RpcCheck
 	{
-		// TODO: 也许把变量名改短一点 lol？
+		// TODO: Maybe change the variable name to something shorter lol?
 		private static readonly SystemTypes[] SystemsThatCanBeUpdatedWhenDead = {
 			SystemTypes.MedBay,
 			SystemTypes.Sabotage,
-			// 幽灵关闭摄像头时更新 Security 系统，但打开时不更新
+			// Ghosts update the Security system when closing cameras, but not opening them
 			SystemTypes.Security,
 			SystemTypes.Ventilation
 		};
@@ -37,13 +37,13 @@ namespace HydraMenu.anticheat.rpc
 			ShipStatus.Instance.Systems.TryGetValue(system, out ISystemType systemInterface);
 			if(systemInterface == null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在当前地图无此系统时尝试更新系统 {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试更新系统 {HydraMenu.ui.Lang.Tr(system)}，但当前地图不存在该系统。");
 				return false;
 			}
 
 			if(player.Data.IsDead && !SystemsThatCanBeUpdatedWhenDead.Contains(system))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 死亡时尝试更新系统 {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在死亡状态下尝试更新系统 {HydraMenu.ui.Lang.Tr(system)}。");
 				return false;
 			}
 
@@ -88,12 +88,12 @@ namespace HydraMenu.anticheat.rpc
 			return true;
 		}
 
-		// 蘑菇混乱系统仅由房主在 SabotageSystemType::Update 函数中更新。玩家永远不应发送它
+		// The Mushroom Mixup system is only updated in the SabotageSystemType::Update function by the host. It should never be sent by a player
 		private static bool ValidateMushroomMixupSystem(PlayerControl player, MessageReader reader)
 		{
 			MushroomMixupSabotageSystem.Operation operation = (MushroomMixupSabotageSystem.Operation)reader.ReadByte();
 
-			Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试以操作 {operation} 更新蘑菇混乱系统。");
+			Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试以操作 {operation} 更新蘑菇混战系统。");
 			return false;
 		}
 
@@ -123,25 +123,25 @@ namespace HydraMenu.anticheat.rpc
 			Dictionary<string, SystemTypes> validSabotages = Sabotage.GetSabotages();
 			if(!validSabotages.ContainsValue(system))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试破坏无效系统: {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试破坏无效的系统：{HydraMenu.ui.Lang.Tr(system)}。");
 				return false;
 			}
 
 			if(!RoleManager.IsImpostorRole(player.Data.RoleType))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在非内鬼时尝试破坏 {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 并非内鬼，却尝试破坏 {HydraMenu.ui.Lang.Tr(system)}。");
 				return false;
 			}
 
 			if(GameManager.Instance.IsHideAndSeek())
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在躲猫猫模式中尝试破坏 {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在躲猫猫模式中尝试破坏 {HydraMenu.ui.Lang.Tr(system)}。");
 				return false;
 			}
 
 			if(player.inVent)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在通风管道中尝试破坏 {system}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在管道内尝试破坏 {HydraMenu.ui.Lang.Tr(system)}。");
 				return false;
 			}
 
@@ -154,32 +154,31 @@ namespace HydraMenu.anticheat.rpc
 
 			if(switches.HasBit(128))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试批量更新开关: {switches}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试批量更新电灯开关：{switches}。");
 				return false;
 			}
 
 			if(switches > 5)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试切换无效开关: {switches}。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 尝试切换无效的电灯开关：{switches}。");
 				return false;
 			}
 
-			// 当灯光当前未被破坏时阻止开关更新
-			// 如果玩家尝试修复灯光但未收到破坏已修复的消息，此检查可能会误报
-			// 这也是为什么你可能会遇到灯光刚修好就又坏了的 bug
-			// 为避免误封玩家，我们只是静默标记并阻止 RPC，以防黑客强制破坏灯光
-			SwitchSystem system = ShipStatus.Instance.Systems[SystemTypes.Electrical].Cast<SwitchSystem>();
-			if(system.ExpectedSwitches == system.ActualSwitches)
+			// Block light switch updates when lights are currently not sabotaged
+			// It is possible for this check to false flag if a player is attempting to fix lights when they have not received the message about the sabotage being fixed
+			// This is also why you may experience the bug where lights get unfixed right after they get fixed
+			// So to avoid wrongly banning players, we just silent flag and block the RPC to prevent hackers from being able to force sabotage lights
+			if(!Sabotage.IsSabotageActive(SystemTypes.Electrical))
 			{
-				Hydra.Log.LogInfo($"已阻止来自 {player.Data.PlayerName} 的开关更新，因为灯光当前未被破坏");
+				Hydra.Log.LogInfo($"Blocked switch update from {player.Data.PlayerName} as lights are not currently sabotaged");
 				return false;
 			}
 
-			// 如果玩家在其客户端接收到 StartMeeting RPC 前切换灯光开关，可能会误报，所以我们静默标记
-			// 也许我们可以检查会议处于什么状态，如果在会议动画播放后则标记玩家？
+			// False positives may be possible if a player is toggling light switches before their client receives the StartMeeting RPC so we silent flag
+			// Maybe we can check to see what state the meeting is in, and if it is after the meeting was animated then flag the player?
 			if(MeetingHud.Instance)
 			{
-				Hydra.Log.LogInfo($"已阻止来自 {player.Data.PlayerName} 的开关更新，因为当前有进行中的会议");
+				Hydra.Log.LogInfo($"Blocked switch update from {player.Data.PlayerName} as there is a currently active meeting");
 				return false;
 			}
 

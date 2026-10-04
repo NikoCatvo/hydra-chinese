@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class AccurateDisconnectReason : Module
 	{
-		public AccurateDisconnectReason() : base("准确断开原因")
+		public AccurateDisconnectReason() : base("AccurateDisconnectReason")
 		{
 			base.Enabled = true;
 		}
@@ -14,8 +14,8 @@ namespace HydraMenu.modules.visuals
 			get { return ModuleManager.accurateDisconnectReason; }
 		}
 
-		// GameData::ShowNotification 函数默认仅处理 ExitGame、Kicked 或 Banned 的断开原因
-		// 任何其他断开原因自动默认为错误断开消息
+		// The GameData::ShowNotification function by default only handles disconnect reasons of ExitGame, Kicked, or Banned
+		// Any other disconnection reasons automatically default to the error disconnection message
 		[HarmonyPatch(typeof(GameData), nameof(GameData.ShowNotification))]
 		class ShowDisconnectNotification
 		{
@@ -24,7 +24,7 @@ namespace HydraMenu.modules.visuals
 				if(!Instance.Enabled) return true;
 
 				switch(reason) {
-					// GameData::ShowNotification 已处理这些断开消息
+					// GameData::ShowNotification already handles these disconnect messages
 					case DisconnectReasons.ExitGame:
 					case DisconnectReasons.Kicked:
 					case DisconnectReasons.Banned:
@@ -32,20 +32,20 @@ namespace HydraMenu.modules.visuals
 						return true;
 
 					case DisconnectReasons.Hacking:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因作弊被 Among Us 反作弊封禁。");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was banned by the Among Us anticheat for hacking.");
 						return false;
 
 					case DisconnectReasons.DuplicateConnectionDetected:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因重复登录被踢出。");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was kicked due to duplicate login.");
 						return false;
 
-					// 此断开原因发生在玩家在游戏开始后未能及时发送 ClientReady 消息
+					// This disconnect reason happens when a player does not send the ClientReady message after the game starts in time
 					case DisconnectReasons.ClientTimeout:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因超时被踢出。");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was kicked due to timeout.");
 						return false;
 
 					default:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因 {reason} 断开连接。");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was disconnected due to {reason}.");
 						return false;
 				}
 			}

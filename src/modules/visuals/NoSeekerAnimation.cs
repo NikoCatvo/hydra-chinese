@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.visuals
 {
 	internal class NoSeekerAnimation : Module
 	{
-		public NoSeekerAnimation() : base("无搜寻者动画") { }
+		public NoSeekerAnimation() : base("NoSeekerAnimation") { }
 
 		private static NoSeekerAnimation Instance
 		{

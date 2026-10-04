@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.ui
 {
 	internal class NotificationManager : MonoBehaviour
 	{
-		public readonly List<Notification> notifications = new List<Notification>();
+		private readonly List<Notification> notifications = new List<Notification>();
 		public bool disableNotifications = false;
 
 		public static Vector2 BoxSize
@@ -47,8 +47,8 @@ namespace HydraMenu.ui
 				{
 					notifications.RemoveAt(i);
 
-					// 因为我们从通知列表中移除了一个元素，必须同时减少当前通知索引
-					// 和最大通知数，以避免访问超出列表长度的错误
+					// Since we removed an element from the notifications list, we have to decrement both the current notification index
+					// and the max notifications to avoid errors from accessing outside the list length
 					i--;
 					notificationCount--;
 					continue;
@@ -85,10 +85,10 @@ namespace HydraMenu.ui
 			return Screen.height / 2 / (int)BoxSize.y;
 		}
 
-		// 通知的存活时间值：成功消息为 5 秒，失败消息为 10 秒
+		// The time to live value for a notification should be five seconds if it is a success message, and ten seconds if it is a failure message
 		public void Send(string title, string message, float ttl = 10)
 		{
-			Hydra.Log.LogMessage($"[通知] [{title}] {message}");
+			Hydra.Log.LogMessage($"[Notification] [{title}] {message}");
 
 			if(disableNotifications) return;
 

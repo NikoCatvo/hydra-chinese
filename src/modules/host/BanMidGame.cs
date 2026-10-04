@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using InnerNet;
 
 namespace HydraMenu.modules.host
 {
 	internal class BanMidGame : Module
 	{
-		public BanMidGame() : base("游戏中封禁")
+		public BanMidGame() : base("BanMidGame")
 		{
 			base.Enabled = true;
 		}

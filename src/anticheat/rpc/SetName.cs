@@ -1,15 +1,15 @@
-using Hazel;
+﻿using Hazel;
 
 namespace HydraMenu.anticheat.rpc
 {
 	internal class SetName : RpcCheck
 	{
-		// 我们将最大名称长度增加到 12 而不是 10，因为需要考虑到当有多个同名玩家时，玩家名称末尾的数字
+		// We increase the max name length to 12 instead of 10 as we need to account for the numbers at the end of player names when there are multiple players with the same name
 		public readonly int MAX_NAME_LENGTH = 12;
 
 		public override bool Validate(PlayerControl player, MessageReader reader)
 		{
-			// 在模组大厅中，玩家拥有自定义名称很常见
+			// On modded lobbies, it is common for players to have custom names
 			if(!Utilities.IsAnticheatPresent()) return true;
 
 			uint netId = reader.ReadUInt32();
@@ -17,19 +17,19 @@ namespace HydraMenu.anticheat.rpc
 
 			if(netId != GetExpectedNetId(player))
 			{
-				Anticheat.Flag(player, $"为 {requestedName} 发送的 SetName RPC 包含无效网络 ID，收到 {netId}，预期 {GetExpectedNetId(player)}。");
+				Anticheat.Flag(player, $"针对 {requestedName} 发送的 SetName RPC 包含无效的网络 ID：收到 {netId}，预期 {GetExpectedNetId(player)}。");
 				return false;
 			}
 
 			if(requestedName.Length > MAX_NAME_LENGTH)
 			{
-				Anticheat.Flag(player, $"{requestedName} 尝试将名称设置得过长 ({requestedName.Length})。");
+				Anticheat.Flag(player, $"{requestedName} 尝试设置过长的名称（{requestedName.Length} 个字符）。");
 				return false;
 			}
 
 			if(requestedName.Contains('<'))
 			{
-				Anticheat.Flag(player, $"{requestedName} 请求了包含无效字符的名称。");
+				Anticheat.Flag(player, $"{requestedName} 请求设置包含无效字符的名称。");
 				return false;
 			}
 
@@ -38,9 +38,9 @@ namespace HydraMenu.anticheat.rpc
 
 		private uint GetExpectedNetId(PlayerControl player)
 		{
-			// 在房主权威模式下，房主发送 SetName RPC 时使用玩家的 NetworkedPlayerInfo 网络对象的 net id
-			// 在服务器权威模式下，服务器发送 SetName RPC 时使用玩家的 PlayerControl 网络对象的 net id
-			// 我不知道为什么存在这个差异，也不明白 SetName RPC 为什么要包含 net id 字段
+			// In host authority, the host sends the SetName RPC with the net id of the player's NetworkedPlayerInfo net object
+			// In server authority, the server sends the SetName RPC with the net id of the player's PlayerControl net object
+			// I don't know why this discrepancy exists, or why the SetName RPC even includes the net id field
 			return Utilities.IsAnticheatPresent() ? player.NetId : player.Data.NetId;
 		}
 
@@ -49,8 +49,8 @@ namespace HydraMenu.anticheat.rpc
 			return RpcCalls.SetName;
 		}
 
-// 在原版服务器上，由于服务器权威的工作方式，房主能够接收 SetName RPC
-			// 在模组服务器上，房主永远不应接收 SetName RPC
+		// On vanilla servers, the host is able to receive the SetName RPC due to how server-authority works
+		// On modded servers, the host should never receive the SetName RPC
 		public override bool IsHostOnly()
 		{
 			return !Utilities.IsAnticheatPresent();

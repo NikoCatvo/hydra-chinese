@@ -1,10 +1,10 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.host
 {
 	internal class BlockLowLevels : Module
 	{
-		public BlockLowLevels() : base("阻止低等级") { }
+		public BlockLowLevels() : base("BlockLowLevels") { }
 
 		public uint MinLevel { get; set; } = 20;
 
@@ -26,7 +26,7 @@ namespace HydraMenu.modules.host
 
 		private static void KickPlayer(PlayerControl player, uint level)
 		{
-			Hydra.notifications.Send("拦截低等级", $"{player.Data.PlayerName} 等级为 {level}，低于等级阈值。他们将被踢出游戏。");
+			Hydra.notifications.Send("低等级限制", $"{player.Data.PlayerName} 的等级为 {level}，低于门槛，将被踢出游戏。");
 			AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
 		}
 

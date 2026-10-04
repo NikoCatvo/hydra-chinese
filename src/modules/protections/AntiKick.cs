@@ -1,4 +1,4 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
@@ -7,7 +7,7 @@ namespace HydraMenu.modules.protections
 {
 	internal class AntiKick : Module
 	{
-		public AntiKick() : base("防踢出")
+		public AntiKick() : base("AntiKick")
 		{
 			base.Enabled = true;
 		}
@@ -34,7 +34,7 @@ namespace HydraMenu.modules.protections
 				bool shouldBlock = false;
 				if(system == SystemTypes.Ventilation && !AmongUsClient.Instance.AmHost)
 				{
-					Hydra.notifications.Send("防护警报", $"{player.Data.PlayerName} 试图对你使用通气系统踢人漏洞!");
+					Hydra.notifications.Send("防护警报", $"{player.Data.PlayerName} 试图对你使用通风系统踢人漏洞！");
 					shouldBlock = true;
 				}
 
@@ -46,9 +46,9 @@ namespace HydraMenu.modules.protections
 
 		private void OnPlayerVotekick(ClientData source, ClientData target)
 		{
-			if(!BlockVotekicks || !AmongUsClient.Instance.AmHost || source.Id != AmongUsClient.Instance.ClientId) return;
+			if(!BlockVotekicks || !AmongUsClient.Instance.AmHost || target.Id != AmongUsClient.Instance.ClientId) return;
 
-			// 移除我们的投票，就像从未发生过一样
+			// Remove our votes, as if nothing ever happened
 			VoteBanSystem.Instance.Votes[AmongUsClient.Instance.ClientId] = new Il2CppStructArray<int>(0);
 		}
 

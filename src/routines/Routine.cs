@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
@@ -29,7 +29,7 @@ namespace HydraMenu.routines
 			}
 		}
 
-		public Routine(string name)
+		protected Routine(string name)
 		{
 			this.name = name;
 		}
@@ -63,7 +63,7 @@ namespace HydraMenu.routines
 				PropertyInfo property = type.GetProperty(propertyName);
 				if(property == null)
 				{
-					Hydra.Log.LogWarning($"配置中存在例程 {name} 的设置 {propertyName}，但此例程无此设置");
+					Hydra.Log.LogWarning($"Config has setting {propertyName} for routine {name} when this routine has no such setting");
 					continue;
 				}
 

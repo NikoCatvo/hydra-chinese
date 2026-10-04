@@ -1,4 +1,5 @@
-using HydraMenu.modules.host;
+﻿using HydraMenu.modules.host;
+using HydraMenu.modules.misc;
 using HydraMenu.modules.protections;
 using HydraMenu.modules.roles;
 using HydraMenu.modules.self;
@@ -23,7 +24,12 @@ namespace HydraMenu.modules
 		public static DisableVentClean disableVentClean = new DisableVentClean();
 		public static FakeShapeshiftBubble fakeShapeshiftBubble = new FakeShapeshiftBubble();
 		public static FlipSkeld flipSkeld = new FlipSkeld();
+		public static TempBanAll tempBanAll = new TempBanAll();
 		public static VoteImmune voteImmune = new VoteImmune();
+
+		// Misc
+		public static ChatLogger chatLogger = new ChatLogger();
+		public static Whisper whisper = new Whisper();
 
 		// Protections
 		public static AntiCrash antiCrash = new AntiCrash();
@@ -77,9 +83,9 @@ namespace HydraMenu.modules
 		public static SkipShhhAnimation skipShhhAnimation = new SkipShhhAnimation();
 		public static SpectatePlayer spectatePlayer = new SpectatePlayer();
 
-		public static readonly Module[] moduleList;
+		public readonly Module[] moduleList;
 
-		static ModuleManager()
+		public ModuleManager()
 		{
 			moduleList = [
 				assignRoles,
@@ -90,7 +96,11 @@ namespace HydraMenu.modules
 				disableVentClean,
 				fakeShapeshiftBubble,
 				flipSkeld,
+				tempBanAll,
 				voteImmune,
+
+				chatLogger,
+				whisper,
 
 				antiCrash,
 				antiKick,
@@ -140,7 +150,7 @@ namespace HydraMenu.modules
 			];
 		}
 
-		// 返回每个模块及其名称的字典，以及每个属性名称和值的字典
+		// Return a dictionary of each module with its name, and another dictionary with names and values of each property
 		public Dictionary<string, Dictionary<string, JsonElement>> GetConfigData()
 		{
 			Dictionary<string, Dictionary<string, JsonElement>> moduleConfig = new Dictionary<string, Dictionary<string, JsonElement>>();
@@ -160,7 +170,7 @@ namespace HydraMenu.modules
 				int moduleIndex = Array.FindIndex(moduleList, r => r.name == moduleName);
 				if(moduleIndex == -1)
 				{
-					Hydra.Log.LogWarning($"配置中存在模块 {moduleName} 的条目，但不存在此模块");
+					Hydra.Log.LogWarning($"Config has entry for module {moduleName} when there is no such module");
 					continue;
 				}
 
@@ -169,19 +179,19 @@ namespace HydraMenu.modules
 			}
 		}
 
-		// 不知道还能把这放哪
+		// No idea where else to put this
 		public void Update()
 		{
-			// 如果 PlayerControl::Data 不为 null，则玩家已完全加载进游戏
+			// If PlayerControl::Data isn't null, then we know the player has fully loaded into the game
 			if(PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null) return;
 
 			if(unlockSabotageButton.SabotageAsCrewmate) HudManager.Instance.SabotageButton.gameObject.SetActive(true);
 			if(ventAsCrewmate.Enabled) HudManager.Instance.ImpostorVentButton.gameObject.SetActive(true);
 
-			// 聊天按钮和比赛信息按钮在游戏中同时激活时会重叠（但在会议中不会）
-			// 我尝试修改 `MatchInfoButton.transform.position` 等来尝试将按钮向左移动
-			// 但那只移动了按钮的碰撞体，而非图标
-			// 所以我们只用这个变通方法，在不会与聊天按钮重叠的情况下隐藏比赛信息按钮
+			// The Chat button and Match Info buttons will overlap if both are active in-game (but not in meetings)
+			// I tried modifying `MatchInfoButton.transform.position` and the likes to try and shift the button towards the left
+			// however that only moved the collider of the button, not the icon
+			// So we just use this workaround to hide the Match Info Button in situations where it will not overlap with the Chat button
 			if(alwaysVisibleChat.Enabled)
 			{
 				HudManager.Instance.MatchInfoButton.gameObject.SetActive(MeetingHud.Instance != null);

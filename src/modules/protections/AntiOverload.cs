@@ -1,11 +1,11 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
 
 namespace HydraMenu.modules.protections
 {
 	internal class AntiOverload : Module
 	{
-		public AntiOverload() : base("防过载")
+		public AntiOverload() : base("AntiOverload")
 		{
 			base.Enabled = true;
 		}
@@ -64,8 +64,8 @@ namespace HydraMenu.modules.protections
 
 				int oldReadPosition = reader.Position;
 
-				// 游戏创建一个具有以下值大小的数组
-				// 如果此值非常大，则客户端将尝试分配数 GB 的内存
+				// The game creates an array with the size of the following value
+				// If this value is very large, then the client will attempt to allocate several gigabytes of memory
 				int arrayLength = reader.ReadPackedInt32();
 
 				if(arrayLength > 1024 || arrayLength > reader.BytesRemaining)

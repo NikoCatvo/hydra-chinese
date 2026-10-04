@@ -1,4 +1,4 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,7 +6,7 @@ namespace HydraMenu.routines
 {
 	public class TeleportSpammer : Routine
 	{
-		public TeleportSpammer() : base("传送刷屏") { }
+		public TeleportSpammer() : base("TeleportSpammer") { }
 
 		public readonly HashSet<int> targets = new HashSet<int>();
 
@@ -39,7 +39,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("传送刷屏", "你离开了游戏，传送刷屏已禁用。", 10);
+			Hydra.notifications.Send("传送刷屏", "传送刷屏已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -47,7 +47,7 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("传送刷屏", "游戏开始后传送刷屏才能使用。", 10);
+				Hydra.notifications.Send("传送刷屏", "传送刷屏只能在游戏开始后使用。", 10);
 				Enabled = false;
 				return;
 			}

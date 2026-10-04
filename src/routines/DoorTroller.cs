@@ -1,11 +1,11 @@
-using HydraMenu.modules;
+﻿using HydraMenu.modules;
 using UnityEngine;
 
 namespace HydraMenu.routines
 {
 	public class DoorTrollerRoutine : Routine
 	{
-		public DoorTrollerRoutine() : base("门恶搞") { }
+		public DoorTrollerRoutine() : base("DoorTroller") { }
 
 		public float LockAndUnlockDelay { get; set; } = 0.5f;
 		private float timeElapsed = 0f;
@@ -33,7 +33,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("门恶搞", "你离开了游戏，门恶搞已禁用。", 10);
+			Hydra.notifications.Send("门恶搞", "门恶搞已关闭，因为你已离开游戏。", 10);
 			Enabled = false;
 		}
 
@@ -41,7 +41,7 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("门恶搞", "游戏开始后门恶搞才能使用。", 10);
+				Hydra.notifications.Send("门恶搞", "门恶搞只能在游戏开始后使用。", 10);
 				Enabled = false;
 				return;
 			}
@@ -55,7 +55,7 @@ namespace HydraMenu.routines
 
 			if(!Sabotage.CanUnlockDoors())
 			{
-				Hydra.notifications.Send("门恶搞", "门恶搞仅可由大厅房主使用，或当前地图支持解锁门。", 10);
+				Hydra.notifications.Send("门恶搞", "只有房主，或当前地图支持解锁门时，才能使用门恶搞。", 10);
 				Enabled = false;
 				return;
 			}

@@ -1,10 +1,12 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using Hazel;
+using HydraMenu.network;
 using HydraMenu.ui.sections;
 using Il2CppInterop.Runtime;
 using InnerNet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HydraMenu.modules
 {
@@ -40,6 +42,10 @@ namespace HydraMenu.modules
 
 		public static event Action<NetworkedPlayerInfo, NetworkedPlayerInfo> OnPlayerCastVote;
 
+		// Sabotage Events
+		public static event Action OnHudOverrideSabotage;
+		public static event Action OnHudOverrideRepair;
+
 		// Network Events
 		public static event Action<InnerNetObject> OnNetObjectSpawn;
 
@@ -54,7 +60,7 @@ namespace HydraMenu.modules
 			}
 		}
 
-		// 此函数在角色选择屏幕结束、游戏准备就绪时调用
+		// This function is called when the role selection screen finishes and the game is ready to play
 		[HarmonyPatch(typeof(GameManager), nameof(GameManager.StartGame))]
 		class GameLoad
 		{
@@ -92,26 +98,26 @@ namespace HydraMenu.modules
 		{
 			static void Prefix(Minigame __instance)
 			{
-				Hydra.Log.LogMessage($"类型为 {__instance.GetIl2CppType().Name} 的小游戏已打开");
+				Hydra.Log.LogMessage($"Minigame of type {__instance.GetIl2CppType().Name} was opened");
 
 				PublishEvent(OnOpenMinigame, __instance);
 			}
 		}
 
-		// 此函数足够晚，允许我们修改梯子冷却而不被游戏覆盖
+		// This function is late enough to allow us to modify the ladder cooldown without the game overriding it
 		[HarmonyPatch(typeof(Ladder), nameof(Ladder.SetDestinationCooldown))]
 		class LadderUsed
 		{
 			static void Postfix(Ladder __instance)
 			{
-				Hydra.Log.LogMessage($"梯子 {__instance.Id} 被使用");
+				Hydra.Log.LogMessage($"Ladder {__instance.Id} was used");
 
 				PublishEvent(OnUseLadder, __instance.Destination);
 			}
 		}
 
-		// 此函数足够晚，允许我们修改梯子冷却而不被游戏覆盖
-		// 存在 ZiplineConsole::SetDestinationCooldown 方法，但由于它被内联了，我们无法对其打补丁
+		// This function is late enough to allow us to modify the ladder cooldown without the game overriding it
+		// There is a ZiplineConsole::SetDestinationCooldown method, but we cannot patch it as it is inlined
 		[HarmonyPatch(typeof(ZiplineBehaviour), nameof(ZiplineBehaviour.ResetTarget))]
 		class ZiplineUsed
 		{
@@ -120,7 +126,7 @@ namespace HydraMenu.modules
 				ZiplineConsole console = __instance.lastUsedConsole;
 				if(console == null) return;
 
-				Hydra.Log.LogMessage("滑索" + (__instance.lastUsedConsole.atTop ? "在顶部" : "在底部") + "被使用");
+				Hydra.Log.LogMessage("Zipline " + (__instance.lastUsedConsole.atTop ? "at top" : "at bottom") + " was used");
 
 				PublishEvent(OnUseZipline, console);
 			}
@@ -137,13 +143,13 @@ namespace HydraMenu.modules
 				if(clientData != null)
 				{
 					PlatformSpecificData platformData = clientData.PlatformData;
-					Hydra.Log.LogMessage($"[玩家日志] {clientData.PlayerName} ({__instance.NetId}) 在 {platformData.Platform} 上加入。好友码 {clientData.FriendCode}，PUID {clientData.ProductUserId}");
+					Hydra.Log.LogMessage($"[PlayerLogger] {clientData.PlayerName} ({__instance.NetId}) joined on {platformData.Platform}. Friendcode {clientData.FriendCode}, PUID {clientData.ProductUserId}");
 				}
 				else
 				{
-// 应尽可能使用 NetworkedPlayerInfo::PlayerName 而非 PlayerControl::name 来获取玩家名称
-				// 然而如果 PlayerControl 对象刚生成，则不太可能已生成 NetworkedPlayerInfo 对象
-					Hydra.Log.LogMessage($"[玩家日志] {__instance.name} ({__instance.NetId}) 已加入。");
+					// We should use NetworkedPlayerInfo::PlayerName instead of PlayerControl::name whenever possible to get the player's name
+					// however if the PlayerControl object has just spawned, then it is unlikely that a NetworkedPlayerInfo object has spawned yet
+					Hydra.Log.LogMessage($"[PlayerLogger] {__instance.name} ({__instance.NetId}) joined.");
 				}
 
 				PublishEvent(OnPlayerJoin, __instance, clientData);
@@ -157,7 +163,7 @@ namespace HydraMenu.modules
 			{
 				if(data.Character == null) return;
 
-				Hydra.Log.LogInfo($"[断开日志] {data.Character.Data.PlayerName} 因原因 {reason} 断开连接");
+				Hydra.Log.LogInfo($"[Disconnect Logger] {data.Character.Data.PlayerName} was disconnected with reason {reason}");
 
 				PublishEvent(OnPlayerDisconnect, data, reason);
 			}
@@ -168,8 +174,6 @@ namespace HydraMenu.modules
 		{
 			static void Prefix(PlayerControl sourcePlayer, string chatText)
 			{
-				Hydra.Log.LogMessage($"[聊天日志] {sourcePlayer.Data.PlayerName}: {chatText}");
-
 				PublishEvent(OnPlayerChat, sourcePlayer, chatText);
 			}
 		}
@@ -177,14 +181,15 @@ namespace HydraMenu.modules
 		[HarmonyPatch(typeof(VentilationSystem), nameof(VentilationSystem.Deserialize))]
 		class PlayerVentNonHost
 		{
-			static void Prefix(VentilationSystem __instance, MessageReader reader) {
+			static void Prefix(VentilationSystem __instance, MessageReader reader)
+			{
 				int oldReadPosition = reader.Position;
 
 				int ventCleans = reader.ReadPackedInt32();
 				if(ventCleans > PlayerControl.AllPlayerControls.Count || ventCleans > reader.BytesRemaining) goto end;
 
-// 跳过通风管道清理数据的读取
-			// 1 字节玩家 ID，1 字节通风管道 ID，所以需要跳过 2 * 通风清理次数
+				// Skip reading through vent clean data
+				// 1 byte for player id, another byte for vent id, so we need to skip by 2 * vent clean count
 				reader.Position += 2 * ventCleans;
 
 				int ventedPlayers = reader.ReadPackedInt32();
@@ -209,17 +214,17 @@ namespace HydraMenu.modules
 
 					if(!inOld && inNew)
 					{
-						Hydra.Log.LogMessage($"{player.Data.PlayerName} 进入通风管道 {newVent}");
+						Hydra.Log.LogMessage($"{player.Data.PlayerName} entered vent {newVent}");
 						PublishEvent(OnPlayerEnterVent, player, newVent);
 					}
 					else if(inOld && !inNew)
 					{
-						Hydra.Log.LogMessage($"{player.Data.PlayerName} 离开通风管道 {oldVent}");
+						Hydra.Log.LogMessage($"{player.Data.PlayerName} left vent {oldVent}");
 						PublishEvent(OnPlayerExitVent, player, oldVent);
 					}
 					else if(oldVent != newVent)
 					{
-						Hydra.Log.LogMessage($"{player.Data.PlayerName} 从通风管道 {oldVent} 移动到 {newVent}");
+						Hydra.Log.LogMessage($"{player.Data.PlayerName} moved from vent {oldVent} to {newVent}");
 						PublishEvent(OnPlayerMoveVent, player, oldVent, newVent);
 					}
 				}
@@ -266,7 +271,7 @@ namespace HydraMenu.modules
 			static void Postfix(PlayerControl player, MessageReader msgReader)
 			{
 				msgReader.Position--;
-				// 1 = 玩家开始观看摄像头，2（及其他所有值）= 玩家停止观看摄像头
+				// 1 = Player started to watch cameras, 2 (and every other value) = Player stopped watching cameras
 				byte operation = msgReader.ReadByte();
 				msgReader.Position++;
 
@@ -351,7 +356,7 @@ namespace HydraMenu.modules
 		{
 			static void Postfix(int srcClient, int clientId)
 			{
-				Hydra.Log.LogInfo($"[踢人日志] {srcClient} 投票踢出 {clientId}");
+				Hydra.Log.LogInfo($"[VotekickLogger] {srcClient} voted to kick out {clientId}");
 
 				ClientData source = AmongUsClient.Instance.FindClientById(srcClient);
 				ClientData target = AmongUsClient.Instance.FindClientById(clientId);
@@ -359,7 +364,7 @@ namespace HydraMenu.modules
 
 				if(clientId == AmongUsClient.Instance.ClientId)
 				{
-					Hydra.notifications.Send("投票踢人日志", $"{source.PlayerName} 投票将你踢出。");
+					Hydra.notifications.Send("踢人投票记录", $"{source.PlayerName} 投票想踢出你。");
 				}
 
 				PublishEvent(OnPlayerVotekick, source, target);
@@ -367,7 +372,7 @@ namespace HydraMenu.modules
 		}
 
 		[HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CastVote))]
-		class PlayerCastVote
+		class PlayerCastVoteHost
 		{
 			static void Postfix(PlayerId srcPlayerId, PlayerId suspectPlayerId)
 			{
@@ -376,6 +381,96 @@ namespace HydraMenu.modules
 				if(voter == null || votee == null) return;
 
 				PublishEvent(OnPlayerCastVote, voter, votee);
+			}
+		}
+
+		[HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Deserialize))]
+		class PlayerCastVoteNonHost
+		{
+			static void Prefix(MeetingHud __instance, MessageReader reader)
+			{
+				if(AmongUsClient.Instance.AmHost) return;
+
+				int oldReadPosition = reader.Position;
+
+				int playerStateCount = reader.ReadPackedInt32();
+				if(playerStateCount > 1024 || playerStateCount > reader.BytesRemaining) goto end;
+
+				Dictionary<byte, byte> playerVotes = new Dictionary<byte, byte>();
+
+				for(int i = 0; i < playerStateCount; i++)
+				{
+					MessageReader msg = reader.ReadMessage();
+					byte voteeId = msg.ReadByte();
+
+					playerVotes[msg.Tag] = voteeId;
+				}
+
+				// Compare with what we have with new data to see vote changes
+				foreach(PlayerControl player in PlayerControl.AllPlayerControls)
+				{
+					if(player.Data == null) continue;
+
+					PlayerVoteArea oldState = __instance.playerStates.FirstOrDefault(state => state.PlayerId == player.PlayerId);
+
+					bool inOld = oldState != null && oldState.VotedForId != 255;
+					bool inNew = playerVotes.TryGetValue(player.PlayerId, out byte voteeId) && voteeId != 255;
+
+					if(!inOld && inNew)
+					{
+						NetworkedPlayerInfo votee = GameData.Instance.GetPlayerById(voteeId);
+						if(votee == null) continue;
+
+						PublishEvent(OnPlayerCastVote, player.Data, votee);
+					}
+				}
+
+				end:
+				reader.Position = oldReadPosition;
+			}
+		}
+
+		[HarmonyPatch(typeof(HudOverrideSystemType), nameof(HudOverrideSystemType.UpdateSystem))]
+		class UpdateHudOverrideHost
+		{
+			static void Postfix(MessageReader msgReader)
+			{
+				msgReader.Position--;
+				HudOverrideSystemOperation operation = (HudOverrideSystemOperation)msgReader.ReadByte();
+				msgReader.Position++;
+
+				if(operation.HasFlag(HudOverrideSystemOperation.Sabotage))
+				{
+					Hydra.Log.LogMessage($"HudOverride system was sabotaged");
+					PublishEvent(OnHudOverrideSabotage);
+				}
+				else
+				{
+					Hydra.Log.LogMessage($"HudOverride system was repaired");
+					PublishEvent(OnHudOverrideRepair);
+				}
+			}
+		}
+
+		[HarmonyPatch(typeof(HudOverrideSystemType), nameof(HudOverrideSystemType.Deserialize))]
+		class UpdateHudOverrideNonHost
+		{
+			static void Prefix(HudOverrideSystemType __instance, MessageReader reader)
+			{
+				bool isActive = reader.ReadBoolean();
+				bool wasActive = __instance.IsActive;
+				reader.Position--;
+
+				if(!wasActive && isActive)
+				{
+					Hydra.Log.LogMessage($"HudOverride system was sabotaged");
+					PublishEvent(OnHudOverrideSabotage);
+				}
+				else if(wasActive && !isActive)
+				{
+					Hydra.Log.LogMessage($"HudOverride system was repaired");
+					PublishEvent(OnHudOverrideRepair);
+				}
 			}
 		}
 
@@ -402,7 +497,7 @@ namespace HydraMenu.modules
 		}
 
 		// These functions are to simplify having null-checks everywhere
-		// 我知道可以用 evt?.Invoke 来避免检查事件是否为空，我只是不喜欢那种代码风格
+		// Yes I know we could use evt?.Invoke to avoid having to check if the event is null, I just don't like that code style
 		private static void PublishEvent(Action evt)
 		{
 			if(evt == null) return;

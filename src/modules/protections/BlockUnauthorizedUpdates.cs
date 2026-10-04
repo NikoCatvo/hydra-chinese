@@ -1,13 +1,13 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 
 namespace HydraMenu.modules.protections
 {
 	internal class BlockUnauthorizedUpdates : Module
 	{
-		// 所有 ShipStatus RPC（CloseDoorsOfType 和 UpdateSystem）应仅发送给房主
-		// 非房主可能向任何人发送系统更新
-		// 并导致实际游戏状态与其游戏状态之间的不同步
-		public BlockUnauthorizedUpdates() : base("阻止未授权更新")
+		// The CloseDoorsOfType and UpdateSystem RPCs should only ever be sent to the host
+		// It is possible for a non-host to send system updates to anyone they want
+		// and cause a desync between our game state and the actual game state
+		public BlockUnauthorizedUpdates() : base("BlockUnauthorizedUpdates")
 		{
 			base.Enabled = true;
 		}
@@ -20,9 +20,16 @@ namespace HydraMenu.modules.protections
 		[HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
 		class OnShipStatusRPC
 		{
-			static bool Prefix()
+			static bool Prefix(byte callId)
 			{
-				return !Instance.Enabled || AmongUsClient.Instance.AmHost;
+				if(!Instance.Enabled) return true;
+
+				if(!AmongUsClient.Instance.AmHost && (callId == (byte)RpcCalls.UpdateSystem || callId == (byte)RpcCalls.CloseDoorsOfType))
+				{
+					return false;
+				}
+
+				return true;
 			}
 		}
 	}

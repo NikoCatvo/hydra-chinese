@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 using System;
 
 namespace HydraMenu.anticheat.rpc
@@ -14,7 +14,7 @@ namespace HydraMenu.anticheat.rpc
 			{
 				Anticheat.Flag(player, $"{player.Data.PlayerName} 在大厅内发送了 SnapTo RPC。");
 
-				// 我们无法在原版服务器上使用其他玩家的 NetTransform net id 发送 SnapTo RPC
+				// We are not able to send SnapTo RPCs with other player's NetTransform net ids on Vanilla servers
 				if(AmongUsClient.Instance.AmHost && !Utilities.IsAnticheatPresent())
 				{
 					player.NetTransform.RpcSnapTo(player.transform.position);

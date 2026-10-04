@@ -1,4 +1,4 @@
-using Hazel;
+﻿using Hazel;
 using System;
 
 namespace HydraMenu.anticheat.rpc
@@ -9,22 +9,22 @@ namespace HydraMenu.anticheat.rpc
 		{
 			if(ShipStatus.Instance == null)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在不存在 ShipStatus 实例时尝试进入通风管道。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在 ShipStatus 实例不存在时尝试进入管道。");
 				return false;
 			}
 
-			// 检查玩家是否在其角色不支持通风管道时通风（如果他们不是工程师或非幽灵内鬼）
-			// 我们还想确保玩家未死亡，以避免玩家刚死就通风管道时的误报
-			// （也许我们可以存储玩家死亡时间，如果 EnterVent RPC 在死亡 500ms 内发送则跳过此检查？）
+			// Check if the player vents if their role does not support venting (if they are not engineer or non-ghost imposter)
+			// We also want to make sure that the player is not dead to avoid false positives if the player vents as soon as they die
+			// (Maybe we can store the time at which a player died and skip this check if an EnterVent RPC was sent within 500ms of dying?)
 			if(!player.Data.IsDead && !player.Data.Role.CanVent)
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 在其角色 ({player.Data.RoleType}) 不支持通风管道时尝试进入通风管道。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 的角色（{HydraMenu.ui.Lang.Tr(player.Data.RoleType)}）无法进入管道，却尝试进入管道。");
 				return false;
 			}
 
 			if(GameManager.Instance.IsHideAndSeek() && RoleManager.IsImpostorRole(player.Data.RoleType))
 			{
-				Anticheat.Flag(player, $"{player.Data.PlayerName} 作为搜寻者时尝试进入通风管道。");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 身为追捕者却尝试进入管道。");
 				return false;
 			}
 

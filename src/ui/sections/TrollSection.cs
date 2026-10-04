@@ -1,4 +1,4 @@
-using BepInEx.Unity.IL2CPP.Utils.Collections;
+﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
 using Hazel;
 using HydraMenu.assets;
 using HydraMenu.modules;
@@ -21,22 +21,22 @@ namespace HydraMenu.ui.sections
 		{
 			if(PlayerControl.LocalPlayer == null)
 			{
-				GUILayout.Label("你当前不在游戏中，这些选项将无法使用。");
+				GUILayout.Label("你当前不在对局中，这些选项将无法使用。");
 			}
 
-			ModuleManager.crashLobby.Enabled = GUILayout.Toggle(ModuleManager.crashLobby.Enabled, "排队大厅崩溃");
-			ModuleManager.autoReportBodies.Enabled = Controls.PlayerSpecificToggle("自动报尸体", PlayerControl.LocalPlayer, ref ModuleManager.autoReportBodies.target);
+			ModuleManager.crashLobby.Enabled = GUILayout.Toggle(ModuleManager.crashLobby.Enabled, "排队崩溃房间");
+			ModuleManager.autoReportBodies.Enabled = Controls.PlayerSpecificToggle("自动报告尸体", PlayerControl.LocalPlayer, ref ModuleManager.autoReportBodies.target);
 			Hydra.routines.autoTriggerSpores.Enabled = GUILayout.Toggle(Hydra.routines.autoTriggerSpores.Enabled, "自动触发孢子");
 			ModuleManager.disableCameras.Enabled = GUILayout.Toggle(ModuleManager.disableCameras.Enabled, "禁用监控摄像头");
 			ModuleManager.disableCloseDoors.Enabled = GUILayout.Toggle(ModuleManager.disableCloseDoors.Enabled, "禁用关门");
 			ModuleManager.disableSabotages.Enabled = GUILayout.Toggle(ModuleManager.disableSabotages.Enabled, "禁用破坏");
-			ModuleManager.disableVents.Enabled = GUILayout.Toggle(ModuleManager.disableVents.Enabled, "禁用通风管道");
-			Hydra.routines.glitterBomb.Enabled = GUILayout.Toggle(Hydra.routines.glitterBomb.Enabled, "亮片炸弹");
+			ModuleManager.disableVents.Enabled = GUILayout.Toggle(ModuleManager.disableVents.Enabled, "禁用管道");
+			Hydra.routines.glitterBomb.Enabled = GUILayout.Toggle(Hydra.routines.glitterBomb.Enabled, "闪光弹");
 			Hydra.routines.ziplineSpammer.Enabled = Controls.GlobalPlayerSpecificToggle("滑索刷屏", Hydra.routines.ziplineSpammer.targets);
 
 			if(GUILayout.Button("踢出所有玩家"))
 			{
-				Hydra.Log.LogInfo($"向所有玩家发送进入通风系统更新");
+				Hydra.Log.LogInfo($"Sending Enter ventilation system update to all players");
 
 				MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
 				writer.Write((ushort)0);
@@ -67,22 +67,26 @@ namespace HydraMenu.ui.sections
 			{
 				if(Utilities.GetCurrentMap() != MapNames.Fungle)
 				{
-					Hydra.notifications.Send("触发孢子", "此选项仅在 Fungle 地图上有效。");
+					Hydra.notifications.Send("触发孢子", "该选项只在真菌丛林地图有效。");
 				}
 				else
 				{
 					FungleShipStatus shipStatus = ShipStatus.Instance.Cast<FungleShipStatus>();
 
+					BatchedMessage batch = new BatchedMessage();
+
 					foreach(Mushroom mushroom in shipStatus.sporeMushrooms.Values)
 					{
-						PlayerControl.LocalPlayer.RpcTriggerSpores(mushroom);
+						batch.QueueTriggerSpore(PlayerControl.LocalPlayer, mushroom);
 					}
+
+					batch.FinishBatch();
 
 					Hydra.notifications.Send("触发孢子", "所有孢子已触发。", 5);
 				}
 			}
 
-			if(GUILayout.Button("耗尽躲藏计时器"))
+			if(GUILayout.Button("耗尽捉迷藏计时"))
 			{
 				AmongUsClient.Instance.StartCoroutine(DepleteSeekTimer().WrapToIl2Cpp());
 			}
@@ -90,13 +94,13 @@ namespace HydraMenu.ui.sections
 			SortedDictionary<int, string> vents = MapAssets.GetVents();
 
 			GUILayout.Space(5);
-			GUILayout.Label($"通风管道传送:");
-			Hydra.routines.teleportSpammer.Enabled = Controls.GlobalPlayerSpecificToggle("传送泛滥", Hydra.routines.teleportSpammer.targets);
+			GUILayout.Label($"管道传送：");
+			Hydra.routines.teleportSpammer.Enabled = Controls.GlobalPlayerSpecificToggle("传送刷屏", Hydra.routines.teleportSpammer.targets);
 
-			GUILayout.Label($"将所有人传送到通风口: {vents.GetValueOrDefault(selectedVent, "不适用")}");
+			GUILayout.Label($"把所有人传送到管道：{vents.GetValueOrDefault(selectedVent, "无")}");
 			selectedVent = Controls.HorizontalVentSlider(vents, selectedVent);
 
-			if(GUILayout.Button("传送到通风口"))
+			if(GUILayout.Button("传送到管道"))
 			{
 				foreach(PlayerControl player in PlayerControl.AllPlayerControls)
 				{
@@ -104,7 +108,7 @@ namespace HydraMenu.ui.sections
 				}
 			}
 
-			if(GUILayout.Button("传送到随机通风口"))
+			if(GUILayout.Button("传送到随机管道"))
 			{
 				foreach(PlayerControl player in PlayerControl.AllPlayerControls)
 				{
@@ -117,29 +121,29 @@ namespace HydraMenu.ui.sections
 			}
 
 			GUILayout.Space(5);
-			// 以设定间隔自动关闭并打开所有门
-			GUILayout.Label("门恶搞:");
+			// Automatically close and open all doors at a set interval
+			GUILayout.Label("门恶搞：");
 			Hydra.routines.doorTroller.Enabled = GUILayout.Toggle(Hydra.routines.doorTroller.Enabled, "启用");
 
-			GUILayout.Label($"锁定和解锁延迟: {Hydra.routines.doorTroller.LockAndUnlockDelay:F2}秒");
+			GUILayout.Label($"锁门与解锁延迟：{Hydra.routines.doorTroller.LockAndUnlockDelay:F2}s");
 			Hydra.routines.doorTroller.LockAndUnlockDelay = GUILayout.HorizontalSlider(Hydra.routines.doorTroller.LockAndUnlockDelay, 0.1f, 2.0f);
 
 			GUILayout.Space(5);
-			GUILayout.Label("自动曝光内鬼:");
+			GUILayout.Label("自动揭发内鬼：");
 			ModuleManager.autoExposeImpostors.Enabled = GUILayout.Toggle(ModuleManager.autoExposeImpostors.Enabled, "启用");
-			ModuleManager.autoExposeImpostors.ExposeOnMurder = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnMurder, "击杀时曝光");
-			ModuleManager.autoExposeImpostors.ExposeOnShapeshift = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnShapeshift, "变身时曝光");
-			ModuleManager.autoExposeImpostors.ExposeOnPhantom = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnPhantom, "幻影时曝光");
+			ModuleManager.autoExposeImpostors.ExposeOnMurder = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnMurder, "击杀时揭发");
+			ModuleManager.autoExposeImpostors.ExposeOnShapeshift = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnShapeshift, "变形时揭发");
+			ModuleManager.autoExposeImpostors.ExposeOnPhantom = GUILayout.Toggle(ModuleManager.autoExposeImpostors.ExposeOnPhantom, "隐身时揭发");
 		}
 
-		// 在躲猫猫模式中，完成任务会根据任务长度（短、普通、长）减少躲藏计时器
-		// 问题在于即使我们已经完成了任务，游戏仍会减少任务计时器
-		// 所以我们可以用同一个任务刷 CompleteTask RPC，将任务计时器减少到零秒
+		// In Hide and Seek, completing a task will reduce the HnS hide timer depending on the length of the task (short, common, or long)
+		// The problem is the game reduces the task timer even if we have already completed the task
+		// so we can spam the CompleteTask RPC with the same task, and reduce the task timer to zero seconds
 		private IEnumerator DepleteSeekTimer()
 		{
 			if(!GameManager.Instance.IsHideAndSeek())
 			{
-				Hydra.notifications.Send("耗尽躲藏计时器", "此功能仅可在躲猫猫模式中使用。");
+				Hydra.notifications.Send("耗尽捉迷藏计时", "该功能只能在捉迷藏模式中使用。");
 				yield break;
 			}
 
@@ -155,15 +159,15 @@ namespace HydraMenu.ui.sections
 			PlayerTask task = PlayerControl.LocalPlayer.myTasks[0];
 			if(task == null)
 			{
-				Hydra.notifications.Send("耗尽躲藏计时器", "此功能要求你至少有一个任务。");
+				Hydra.notifications.Send("耗尽捉迷藏计时", "该功能要求你至少拥有一个任务。");
 				yield break;
 			}
 
-			// 如果躲猫猫躲藏计时器结束，我们所有任务都会被替换为 ImportantTextTask
+			// If the HnS hide timer is up, all our tasks are replaced with a task of ImportantTextTask
 			NormalPlayerTask normalTask = task.TryCast<NormalPlayerTask>();
 			if(normalTask == null)
 			{
-				Hydra.notifications.Send("耗尽躲藏计时器", "此功能不能在最后躲藏时间使用。");
+				Hydra.notifications.Send("耗尽捉迷藏计时", "该功能无法在最后的躲藏时间中使用。");
 				yield break;
 			}
 
@@ -188,13 +192,13 @@ namespace HydraMenu.ui.sections
 			int totalCompletions = 0;
 			int requiredCompletions = (int)Math.Ceiling(gameFlow.currentHideTime / completeDeduction);
 
-			Hydra.Log.LogInfo($"当前逃生时间为 {gameFlow.currentHideTime}，每次任务完成减少计时器 {completeDeduction} 秒。我们需要发送 CompleteTask RPC {requiredCompletions} 次来耗尽躲猫猫计时器。");
+			Hydra.Log.LogInfo($"Current escape time is {gameFlow.currentHideTime} and each task completion reduces the timer by {completeDeduction}s. We need to send the CompleteTask RPC {requiredCompletions} times to deplete the HnS timer.");
 
 			while(totalCompletions < requiredCompletions)
 			{
 				BatchedMessage batch = new BatchedMessage();
 
-				// 非房主的消息打包限制应为十，但 Among Us 反作弊会在单个批次中超过六个 CompleteTask RPC 时将我们断开连接
+				// The message packing limit for non-hosts should be ten, but the Among Us anticheat disconnects us if we have more than six CompleteTask RPCs in a single batch
 				for(byte i = 0; i < 6; i++)
 				{
 					batch.QueueCompleteTask(PlayerControl.LocalPlayer, (uint)task.Index);
@@ -202,7 +206,7 @@ namespace HydraMenu.ui.sections
 
 				batch.FinishBatch();
 
-				// 每个批次恰好包含六个 CompleteTask RPC，可能超过所需任务完成次数，但这没问题
+				// Each batch will contain exactly six CompleteTask RPCs, which may be more than the required task completions, but that is fine
 				totalCompletions += 6;
 
 				yield return Effects.Wait(0.05f);
