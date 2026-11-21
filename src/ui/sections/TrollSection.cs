@@ -38,7 +38,7 @@ namespace HydraMenu.ui.sections
 
 			if(!hasAnticheat)
 			{
-				Hydra.routines.spamInfluencerCues.Enabled = GUILayout.Toggle(Hydra.routines.spamInfluencerCues.Enabled, "刷屏社媒提示");
+				Hydra.routines.spamInfluencerCues.Enabled = GUILayout.Toggle(Hydra.routines.spamInfluencerCues.Enabled, "刷屏网红提示");
 				Hydra.routines.ziplineSpammer.Enabled = Controls.GlobalPlayerSpecificToggle("滑索刷屏", Hydra.routines.ziplineSpammer.targets);
 			}
 

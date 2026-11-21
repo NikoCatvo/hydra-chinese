@@ -20,7 +20,7 @@ Hydra 是一个基于 [BepInEx](https://github.com/BepInEx/BepInEx) 的 Among Us
 
 上游 2.2.0 加了 1197 行、删了 325 行，新增 10 个文件。汉化是**重新对齐到 2.2.0 源码**做的：
 
-- 新功能全部汉化：全场停电、实时票数、匿名投票、禁用孢子触发、禁用滑索、禁用幻影动画、伪造变形气泡、刷屏社媒提示、Despawn 反作弊检测、精确断线原因
+- 新功能全部汉化：全场停电、实时票数、匿名投票、禁用孢子触发、禁用滑索、禁用幻影动画、伪造变形气泡、刷屏网红提示、Despawn 反作弊检测、精确断线原因
 - 跟进上游重命名：`RolesSection`、`ForceDTLS`、`DisableNotifications`、`SpoofedVersion`、`SpoofedPlatform`
 - 平台名与版本列表改用上游的 `GameAssets` 实现，删掉旧版自建的映射表
 - 补译残留英文：`Freeze`、`Assign Tasks`、`Task Finisher`、`Murder Player`、`Spoof Mod Registration`

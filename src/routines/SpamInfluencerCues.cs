@@ -40,7 +40,7 @@ namespace HydraMenu.routines
 
 		private void OnDisconnect()
 		{
-			Hydra.notifications.Send("刷屏社媒提示", "你已离开游戏，刷屏社媒提示已关闭。", 10);
+			Hydra.notifications.Send("刷屏网红提示", "你已离开游戏，刷屏网红提示已关闭。", 10);
 			Enabled = false;
 		}
 
@@ -48,7 +48,7 @@ namespace HydraMenu.routines
 		{
 			if(PlayerControl.LocalPlayer == null || ShipStatus.Instance == null)
 			{
-				Hydra.notifications.Send("刷屏社媒提示", "刷屏社媒提示只能在游戏开始后使用。", 10);
+				Hydra.notifications.Send("刷屏网红提示", "刷屏网红提示只能在游戏开始后使用。", 10);
 				Enabled = false;
 				return;
 			}
