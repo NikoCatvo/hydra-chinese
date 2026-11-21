@@ -28,7 +28,7 @@ namespace HydraMenu.anticheat.rpc
 			if(PlayerControl.LocalPlayer != null && LobbyBehaviour.Instance == null)
 			{
 				// The vanilla game already ignores SetStartCounter RPCs when the game has started, so we do not need to revert it
-				Anticheat.Flag(player, $"{player.Data.PlayerName} sent a SetStartCounter RPC when the lobby has despawned.");
+				Anticheat.Flag(player, $"{player.Data.PlayerName} 在大厅已销毁的情况下发送了 SetStartCounter RPC。");
 				return false;
 			}
 			*/

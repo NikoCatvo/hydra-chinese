@@ -4,7 +4,7 @@ namespace HydraMenu.modules.roles
 {
 	internal class NoShapeshiftAnimation : Module
 	{
-		public NoShapeshiftAnimation() : base("NoShapeshiftAnimation") { }
+		public NoShapeshiftAnimation() : base("NoShapeshiftAnimation", [ typeof(FakeShapeshiftBubble) ]) { }
 
 		private static NoShapeshiftAnimation Instance
 		{
@@ -32,6 +32,15 @@ namespace HydraMenu.modules.roles
 				if(!Instance.Enabled) return;
 
 				shouldAnimate = false;
+			}
+		}
+
+		protected override void OnEnable()
+		{
+			if(ModuleManager.fakeShapeshiftBubble.Enabled)
+			{
+				Hydra.notifications.Send("禁用变形动画", "伪造变形气泡与本模块不兼容，已自动关闭。", 5);
+				ModuleManager.fakeShapeshiftBubble.Enabled = false;
 			}
 		}
 	}

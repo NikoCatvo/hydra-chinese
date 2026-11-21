@@ -70,6 +70,7 @@ namespace HydraMenu.modules.misc
 			if(client.Character != target) return;
 
 			Hydra.notifications.Send("私聊", "私聊对象已离开游戏，私聊已关闭。");
+			Enabled = false;
 		}
 
 		private void OnDisconnect()

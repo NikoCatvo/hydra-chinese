@@ -14,8 +14,9 @@ namespace HydraMenu.modules.roles
 
 		public bool KillOtherImpostors { get; set; } = false;
 		public bool KillAsPhantom { get; set; } = false;
-		public bool NoKillCooldown { get; set; } = false;
+		public bool KillVentedPlayers { get; set; } = false;
 		public bool KillGhosts { get; set; } = false;
+		public bool NoKillCooldown { get; set; } = false;
 
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetKillTimer))]
 		class KillTimer
@@ -58,7 +59,8 @@ namespace HydraMenu.modules.roles
 					target != PlayerControl.LocalPlayer.Data &&
 					!target.Disconnected &&
 					(!target.IsDead || Instance.KillGhosts) &&
-					(!RoleManager.IsImpostorRole(target.RoleType) || Instance.KillOtherImpostors);
+					(!RoleManager.IsImpostorRole(target.RoleType) || Instance.KillOtherImpostors) &&
+					(!target.Object.inVent || Instance.KillVentedPlayers);
 		}
 
 		// The CheckMurder RPC handler has checks against killing ghosts
@@ -77,10 +79,10 @@ namespace HydraMenu.modules.roles
 
 		// The backend AU servers rely on the CheckVanish and CheckAppear RPCs to know if a player has vanished
 		// This information is then used by the server's CheckMurder RPC handler to know if a kill should be authorized
-		// No idea why, but Innersloth has secured the CheckVanish and CheckAppear RPCs to hell the Vanish and Appear RPCs have almost-zero protection
+		// No idea why, but Innersloth has secured the CheckVanish and CheckAppear RPCs to hell but the Vanish and Appear RPCs have almost-zero protection
 		// Sending CheckVanish in the lobby, as non-phantom, or while already phantomed, in cooldown, or with the maxDuration field mismatched to the game settings phantom duration will result in a ban
 		// Sending CheckAppear in the lobby, as non-phantom, or while non-vanished, will also result in a kick from the lobby
-		// But sending Vanish or Appear in any of those conditions will result in the RPC being relayed to other players
+		// But sending Vanish or Appear in any of those conditions will result in the RPC going through without issue
 		[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckVanish))]
 		class VanishBypass
 		{

@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using HydraMenu.assets;
 using InnerNet;
 
 namespace HydraMenu.anticheat
@@ -19,7 +20,7 @@ namespace HydraMenu.anticheat
 
 				if(!IsValidPlatform(platformData))
 				{
-					Anticheat.Flag(__instance, $"检测到 {clientData.PlayerName} 伪造平台信息。平台：{HydraMenu.ui.Lang.Tr(platformData.Platform)}，平台名称：{platformData.PlatformName}，XUID：{platformData.XboxPlatformId}，PSID：{platformData.PsnPlatformId}。");
+					Anticheat.Flag(__instance, $"检测到 {clientData.PlayerName} 伪造平台信息。平台：{GameAssets.GetPlatformName(platformData.Platform)}，平台名称：{platformData.PlatformName}，XUID：{platformData.XboxPlatformId}，PSID：{platformData.PsnPlatformId}。");
 				}
 			}
 		}

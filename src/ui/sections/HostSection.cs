@@ -33,14 +33,20 @@ namespace HydraMenu.ui.sections
 				GUILayout.Label("你不是当前房间的房主。使用这些选项要么无效，要么会被反作弊封禁。");
 			}
 
+			bool hasAnticheat = Utilities.IsAnticheatPresent();
+
 			ModuleManager.banMidGame.Enabled = GUILayout.Toggle(ModuleManager.banMidGame.Enabled, "可在游戏中途封禁玩家");
 
 			ModuleManager.flipSkeld.Enabled = GUILayout.Toggle(ModuleManager.flipSkeld.Enabled, "使用翻转的太空飞船地图");
 
 			ModuleManager.disableGameEnd.Enabled = GUILayout.Toggle(ModuleManager.disableGameEnd.Enabled, "禁用游戏结束");
+			ModuleManager.disableSporeTriggers.Enabled = GUILayout.Toggle(ModuleManager.disableSporeTriggers.Enabled, "禁用孢子触发");
 			ModuleManager.disableVentClean.Enabled = GUILayout.Toggle(ModuleManager.disableVentClean.Enabled, "禁用管道清理");
 
-			ModuleManager.fakeShapeshiftBubble.Enabled = GUILayout.Toggle(ModuleManager.fakeShapeshiftBubble.Enabled, "伪造变形气泡");
+			if(!hasAnticheat)
+			{
+				ModuleManager.disableZipline.Enabled = GUILayout.Toggle(ModuleManager.disableZipline.Enabled, "禁用滑索");
+			}
 
 			GUILayout.BeginHorizontal();
 			ModuleManager.blockLowLevels.Enabled = GUILayout.Toggle(ModuleManager.blockLowLevels.Enabled, $"踢出等级低于 {ModuleManager.blockLowLevels.MinLevel} 的玩家");
@@ -201,6 +207,12 @@ namespace HydraMenu.ui.sections
 
 		private static void KillAllPlayers()
 		{
+			if(PlayerControl.LocalPlayer == null)
+			{
+				Hydra.notifications.Send("击杀玩家", "该选项只能在游戏内使用。");
+				return;
+			}
+
 			bool hasAnticheat = Utilities.IsAnticheatPresent();
 
 			if(hasAnticheat && AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
@@ -236,7 +248,7 @@ namespace HydraMenu.ui.sections
 
 		private static void SpawnLobby()
 		{
-			Hydra.Log.LogInfo($"Attempting to spawn in lobby");
+			Hydra.Log.LogInfo($"Attempting to spawn lobby");
 
 			if(Utilities.IsAnticheatPresent() && !AmongUsClient.Instance.AmHost)
 			{

@@ -32,20 +32,20 @@ namespace HydraMenu.modules.visuals
 						return true;
 
 					case DisconnectReasons.Hacking:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was banned by the Among Us anticheat for hacking.");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因作弊被 Among Us 反作弊封禁。");
 						return false;
 
 					case DisconnectReasons.DuplicateConnectionDetected:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was kicked due to duplicate login.");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因重复登录被踢出。");
 						return false;
 
 					// This disconnect reason happens when a player does not send the ClientReady message after the game starts in time
 					case DisconnectReasons.ClientTimeout:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was kicked due to timeout.");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 因连接超时被踢出。");
 						return false;
 
 					default:
-						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} was disconnected due to {reason}.");
+						HudManager.Instance.Notifier.AddDisconnectMessage($"{playerName} 已断开连接，原因：{reason}。");
 						return false;
 				}
 			}

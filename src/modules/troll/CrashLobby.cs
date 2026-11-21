@@ -8,6 +8,7 @@
 		{
 			PlayerControl.LocalPlayer.CmdReportDeadBody(null);
 			Hydra.notifications.Send("房间崩溃", "房间已崩溃。");
+			Enabled = false;
 		}
 
 		protected override void OnEnable()

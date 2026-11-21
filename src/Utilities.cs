@@ -1,6 +1,7 @@
 ﻿using AmongUs.GameOptions;
 using Hazel;
 using HydraMenu.network;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
 using System.Collections.Generic;
 using System.Linq;
@@ -289,7 +290,7 @@ namespace HydraMenu
 		// however nowhere in the callstack from ShipStatus::UpdateSystem to PlayerPhysics::RpcBootFromVent is there a check to ensure that the current client is the host of the lobby
 		// If you were to send this system update to someone other than the host, they will send the BootFromVent RPC and get kicked by the Among Us anticheat
 		// In my experience this has been incredibly useful to kick out players who are blatantly hacking, calling useless meetings, or causing other mischief even if I am not the host if the lobby
-		public static void KickPlayer(PlayerControl player, bool skipFirstStage = false)
+		public static void KickPlayer(PlayerControl player)
 		{
 			if(AmongUsClient.Instance.AmHost)
 			{
@@ -316,34 +317,38 @@ namespace HydraMenu
 				return;
 			}
 
+			MessageWriter enterVent = MessageWriter.Get(SendOption.None);
+			enterVent.Write((ushort)0);
+			enterVent.Write((byte)VentilationSystem.Operation.Enter);
+			enterVent.Write((byte)0);
+
+			MessageWriter bootFromVent = MessageWriter.Get(SendOption.None);
+			bootFromVent.Write((ushort)1);
+			bootFromVent.Write((byte)VentilationSystem.Operation.BootImpostors);
+			bootFromVent.Write((byte)0);
+
 			BatchedMessage batch = new BatchedMessage(player.OwnerId);
-
-			if(!skipFirstStage)
-			{
-				Hydra.Log.LogInfo($"Sending Enter ventilation system update to {player.OwnerId}");
-
-				MessageWriter writer = MessageWriter.Get(SendOption.None);
-				writer.Write((ushort)0);
-				writer.Write((byte)VentilationSystem.Operation.Enter);
-				writer.Write((byte)0);
-
-				batch.QueueUpdateSystem(PlayerControl.LocalPlayer, SystemTypes.Ventilation, writer);
-				writer.Recycle();
-			}
-
-			Hydra.Log.LogInfo($"Sending BootImposters ventilation system update to {player.OwnerId}");
-
-			MessageWriter writer2 = MessageWriter.Get(SendOption.None);
-			writer2.Write((ushort)1);
-			writer2.Write((byte)VentilationSystem.Operation.BootImpostors);
-			writer2.Write((byte)0);
-
-			batch.QueueUpdateSystem(PlayerControl.LocalPlayer, SystemTypes.Ventilation, writer2);
-			writer2.Recycle();
-
+			batch.QueueUpdateSystem(PlayerControl.LocalPlayer, SystemTypes.Ventilation, enterVent);
+			batch.QueueUpdateSystem(PlayerControl.LocalPlayer, SystemTypes.Ventilation, bootFromVent);
 			batch.FinishBatch();
 
+			enterVent.Recycle();
+			bootFromVent.Recycle();
+
 			Hydra.notifications.Send("踢出玩家", $"{player.Data.PlayerName} 已被踢出游戏。", 5);
+		}
+
+		public static int GetVotekickCount(VoteBanSystem system, int clientId)
+		{
+			if(!system.Votes.TryGetValue(clientId, out Il2CppStructArray<int> votes)) return 0;
+
+			int voteCount = 0;
+			foreach(int voter in votes)
+			{
+				if(voter != 0) voteCount++;
+			}
+
+			return voteCount;
 		}
 	}
 }

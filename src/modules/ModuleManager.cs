@@ -21,7 +21,9 @@ namespace HydraMenu.modules
 		public static BlockLowLevels blockLowLevels = new BlockLowLevels();
 		public static DisableGameEnd disableGameEnd = new DisableGameEnd();
 		public static DisableMeetings disableMeetings = new DisableMeetings();
+		public static DisableSporeTriggers disableSporeTriggers = new DisableSporeTriggers();
 		public static DisableVentClean disableVentClean = new DisableVentClean();
+		public static DisableZipline disableZipline = new DisableZipline();
 		public static FakeShapeshiftBubble fakeShapeshiftBubble = new FakeShapeshiftBubble();
 		public static FlipSkeld flipSkeld = new FlipSkeld();
 		public static TempBanAll tempBanAll = new TempBanAll();
@@ -39,11 +41,12 @@ namespace HydraMenu.modules
 		public static BlockUnauthorizedUpdates blockUnauthorizedUpdates = new BlockUnauthorizedUpdates();
 		public static BypassDisconnectPenalty bypassDisconnectPenalty = new BypassDisconnectPenalty();
 		public static BypassShapeshiftRatelimits bypassShapeshiftRatelimits = new BypassShapeshiftRatelimits();
-		public static ForceDTLs forceDtls = new ForceDTLs();
+		public static ForceDTLS forceDtls = new ForceDTLS();
 
 		// Roles
 		public static MoveInVents moveInVents = new MoveInVents();
 		public static NoKillChecks noKillChecks = new NoKillChecks();
+		public static NoPhantomAnimation noPhantomAnimation = new NoPhantomAnimation();
 		public static NoSabotageCooldown noSabotageCooldown = new NoSabotageCooldown();
 		public static NoShapeshiftAnimation noShapeshiftAnimation = new NoShapeshiftAnimation();
 		public static UnlockSabotageButton unlockSabotageButton = new UnlockSabotageButton();
@@ -66,6 +69,7 @@ namespace HydraMenu.modules
 		// Troll
 		public static AutoExposeImpostors autoExposeImpostors = new AutoExposeImpostors();
 		public static AutoReportBodies autoReportBodies = new AutoReportBodies();
+		public static Blackout blackout = new Blackout();
 		public static CrashLobby crashLobby = new CrashLobby();
 		public static DisableCameras disableCameras = new DisableCameras();
 		public static DisableCloseDoors disableCloseDoors = new DisableCloseDoors();
@@ -77,6 +81,8 @@ namespace HydraMenu.modules
 		public static AlwaysVisibleChat alwaysVisibleChat = new AlwaysVisibleChat();
 		public static Fullbright fullbright = new Fullbright();
 		public static NoSeekerAnimation noSeekerAnimation = new NoSeekerAnimation();
+		public static RealtimeVotes realtimeVotes = new RealtimeVotes();
+		public static ShowAnonymousVotes showAnonymousVotes = new ShowAnonymousVotes();
 		public static ShowGhostMessages showGhostMessages = new ShowGhostMessages();
 		public static ShowGhosts showGhosts = new ShowGhosts();
 		public static ShowProtections showProtections = new ShowProtections();
@@ -93,8 +99,9 @@ namespace HydraMenu.modules
 				blockLowLevels,
 				disableGameEnd,
 				disableMeetings,
+				disableSporeTriggers,
 				disableVentClean,
-				fakeShapeshiftBubble,
+				disableZipline,
 				flipSkeld,
 				tempBanAll,
 				voteImmune,
@@ -111,8 +118,10 @@ namespace HydraMenu.modules
 				bypassShapeshiftRatelimits,
 				forceDtls,
 
+				fakeShapeshiftBubble,
 				moveInVents,
 				noKillChecks,
+				noPhantomAnimation,
 				noSabotageCooldown,
 				noShapeshiftAnimation,
 				unlockSabotageButton,
@@ -132,6 +141,7 @@ namespace HydraMenu.modules
 
 				autoExposeImpostors,
 				autoReportBodies,
+				blackout,
 				crashLobby,
 				disableCameras,
 				disableCloseDoors,
@@ -142,6 +152,8 @@ namespace HydraMenu.modules
 				alwaysVisibleChat,
 				fullbright,
 				noSeekerAnimation,
+				realtimeVotes,
+				showAnonymousVotes,
 				showGhostMessages,
 				showGhosts,
 				showProtections,
@@ -187,15 +199,6 @@ namespace HydraMenu.modules
 
 			if(unlockSabotageButton.SabotageAsCrewmate) HudManager.Instance.SabotageButton.gameObject.SetActive(true);
 			if(ventAsCrewmate.Enabled) HudManager.Instance.ImpostorVentButton.gameObject.SetActive(true);
-
-			// The Chat button and Match Info buttons will overlap if both are active in-game (but not in meetings)
-			// I tried modifying `MatchInfoButton.transform.position` and the likes to try and shift the button towards the left
-			// however that only moved the collider of the button, not the icon
-			// So we just use this workaround to hide the Match Info Button in situations where it will not overlap with the Chat button
-			if(alwaysVisibleChat.Enabled)
-			{
-				HudManager.Instance.MatchInfoButton.gameObject.SetActive(MeetingHud.Instance != null);
-			}
 		}
 	}
 }

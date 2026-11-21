@@ -150,7 +150,7 @@ namespace HydraMenu.ui.sections
 					$"\n好友代码：" + (streamerMode ? "已隐藏" : target.Data.FriendCode) +
 					$"\nPUID：" + (streamerMode ? "已隐藏" : target.Data.Puid) +
 					$"\n等级：{target.Data.PlayerLevel + 1}" +
-					$"\n设备：{Lang.Tr(platform.Platform)}" +
+					$"\n设备：{GameAssets.GetPlatformName(platform.Platform)}" +
 					(target.OwnerId == AmongUsClient.Instance.HostId ? "\n房主：是" : "");
 			}
 
@@ -161,7 +161,12 @@ namespace HydraMenu.ui.sections
 			Hydra.routines.playerFollower.Enabled = Controls.PlayerSpecificToggle("跟随", target, ref Hydra.routines.playerFollower.target);
 			Hydra.routines.jailPlayer.Enabled = Controls.PlayerSpecificToggle("关进监狱", target, Hydra.routines.jailPlayer.targets);
 			Hydra.routines.teleportSpammer.Enabled = Controls.PlayerSpecificToggle("刷屏传送", target, Hydra.routines.teleportSpammer.targets);
-			Hydra.routines.ziplineSpammer.Enabled = Controls.PlayerSpecificToggle("刷屏滑索", target, Hydra.routines.ziplineSpammer.targets);
+
+			if(!hasAnticheat)
+			{
+				Hydra.routines.ziplineSpammer.Enabled = Controls.PlayerSpecificToggle("刷屏滑索", target, Hydra.routines.ziplineSpammer.targets);
+			}
+
 			ModuleManager.whisper.Enabled = Controls.PlayerSpecificToggle("私聊", target, ref ModuleManager.whisper.target);
 
 			GUILayout.BeginHorizontal();
@@ -197,10 +202,19 @@ namespace HydraMenu.ui.sections
 				Utilities.AttemptStartMeeting(PlayerControl.LocalPlayer, target.Data);
 			}
 
+			GUILayout.BeginHorizontal();
+			if(GUILayout.Button("投票踢人"))
+			{
+				VoteBanSystem.Instance.CmdAddVote(target.OwnerId);
+
+				Hydra.notifications.Send("投票踢人", $"{target.Data.PlayerName} 已被投票踢出。（{Utilities.GetVotekickCount(VoteBanSystem.Instance, target.OwnerId)}/3）");
+			}
+
 			if(GUILayout.Button("踢出玩家"))
 			{
 				Utilities.KickPlayer(target);
 			}
+			GUILayout.EndHorizontal();
 
 			SortedDictionary<int, string> vents = MapAssets.GetVents();
 
@@ -250,19 +264,19 @@ namespace HydraMenu.ui.sections
 			GUILayout.BeginHorizontal();
 			if(GUILayout.Button("给玩家刷满任务"))
 			{
-				byte[] taskIds = new byte[255];
+				byte[] tasks = new byte[255];
 
 				for(byte i = 0; i < 255; i++)
 				{
-					taskIds[i] = i;
+					tasks[i] = i;
 				}
 
-				target.Data.RpcSetTasks(taskIds);
+				AssignTasks(target, tasks);
 			}
 
 			if(GUILayout.Button("清除任务"))
 			{
-				target.Data.RpcSetTasks(Array.Empty<byte>());
+				AssignTasks(target, Array.Empty<byte>());
 			}
 			GUILayout.EndHorizontal();
 
@@ -310,6 +324,14 @@ namespace HydraMenu.ui.sections
 			}
 			GUILayout.EndHorizontal();
 
+			if(GUILayout.Button("冻结"))
+			{
+				IGameOptions gameOptions = GameOptions.CreateCloneOptions(GameManager.Instance.LogicOptions.currentGameOptions);
+				gameOptions.SetFloat(FloatOptionNames.PlayerSpeedMod, 0.1e-10f);
+
+				GameOptions.SendGameOptionsToClient(gameOptions, target.OwnerId);
+			}
+
 			/*
 			// The problem with changing the TaskBarMode is that if we remove the task bar, we are not able to bring it back
 			GUILayout.BeginHorizontal();
@@ -347,7 +369,21 @@ namespace HydraMenu.ui.sections
 			}
 		}
 
-		private static void AttemptMurder(PlayerControl target)
+		private void AssignTasks(PlayerControl target, byte[] tasks)
+		{
+			bool hasAnticheat = Utilities.IsAnticheatPresent();
+			if(hasAnticheat && !AmongUsClient.Instance.AmHost)
+			{
+				Hydra.notifications.Send("分配任务", "只有房主才能使用该功能。");
+				return;
+			}
+
+			target.Data.RpcSetTasks(tasks);
+
+			Hydra.notifications.Send("分配任务", $"已为 {target.Data.PlayerName} 分配 {tasks.Length} 个任务。", 5f);
+		}
+
+		private void AttemptMurder(PlayerControl target)
 		{
 			bool hasAnticheat = Utilities.IsAnticheatPresent();
 
@@ -448,7 +484,7 @@ namespace HydraMenu.ui.sections
 			batch.FinishBatch();
 		}
 
-		private static IEnumerator AttemptFrameForKillingAll(PlayerControl target)
+		private IEnumerator AttemptFrameForKillingAll(PlayerControl target)
 		{
 			Hydra.Log.LogInfo($"Attempting to frame {target.Data.PlayerName} for killing all players...");
 

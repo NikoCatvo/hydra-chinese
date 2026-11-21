@@ -1,4 +1,4 @@
-# Hydra 2.1.0 汉化版
+# Hydra 2.2.0 汉化版
 
 <div align="center">
   <img src="img/main.png" alt="Hydra 玩家界面截图"/>
@@ -8,11 +8,39 @@
 
 Hydra 是一个基于 [BepInEx](https://github.com/BepInEx/BepInEx) 的 Among Us 模组，旨在提升 Among Us 的游戏体验。Hydra 加入了各种便利功能、有趣的整蛊功能，以及一个用于检测房间中作弊玩家的反作弊系统。
 
-本仓库是基于上游 [MrDiamond64/Hydra](https://github.com/MrDiamond64/Hydra) 2.1.0 的**简体中文汉化版本**，在原版基础上做了以下改动：
+本仓库是基于上游 [MrDiamond64/Hydra](https://github.com/MrDiamond64/Hydra) **2.2.0** 的**简体中文汉化版本**，对应游戏版本 **Among Us 2026.9.29（v19）**，在原版基础上做了以下改动：
 
-- **完整中文汉化**：菜单分区、所有开关/按钮/滑块标签、游戏内通知、反作弊检测提示，以及地图地点、管道、破坏项、任务动画等运行时名称均已翻译为中文
-- **标题栏署名**：菜单标题栏显示「汉化 by 微生猫」
+- **完整中文汉化**：947 条字符串 —— 13 个分区标题、所有开关/按钮/滑块标签、游戏内通知、反作弊检测提示，以及角色、地图、地点、管道、破坏项、颜色、平台等运行时名称
+- **标题栏署名**：菜单标题栏显示「Hydra - 2.2.0 | 汉化 by 微生猫」
 - **保留原有功能**：配置文件存档、反作弊系统等上游功能均保持不变
+
+## 版本变更
+
+### 2.2.0-zh（当前）
+
+上游 2.2.0 加了 1197 行、删了 325 行，新增 10 个文件。汉化是**重新对齐到 2.2.0 源码**做的：
+
+- 新功能全部汉化：全场停电、实时票数、匿名投票、禁用孢子触发、禁用滑索、禁用幻影动画、伪造变形气泡、刷屏社媒提示、Despawn 反作弊检测、精确断线原因
+- 跟进上游重命名：`RolesSection`、`ForceDTLS`、`DisableNotifications`、`SpoofedVersion`、`SpoofedPlatform`
+- 平台名与版本列表改用上游的 `GameAssets` 实现，删掉旧版自建的映射表
+- 补译残留英文：`Freeze`、`Assign Tasks`、`Task Finisher`、`Murder Player`、`Spoof Mod Registration`
+- 修掉房间崩溃提示重复弹两次的问题
+- 修掉上游 `TrollSection.cs` 缺 `using System.Linq;` 导致 `Array.Reverse()` 编译失败（`CS1501`）
+
+### 2.1.0-zh
+
+首个汉化版本。
+
+## 汉化范围
+
+| 内容 | 说明 |
+| --- | --- |
+| 分区栏 | 通用 / 自身 / 整蛊 / 破坏 / 房主 / 角色 / 玩家 / 移动 / 视觉 / 防护 / 反作弊 / 伪装 / 菜单 |
+| 游戏内通知 | 击杀、管道进出、破坏、投票踢人、断线、反作弊标记 |
+| 反作弊 | 18 个 RPC 检查项、惩罚方式、系统名 |
+| 运行时名称 | `Lang.cs` 把枚举显示成中文，找不到时回退英文，不会出现空字符串 |
+
+**有意不翻**：`LogOutput.log` 调试日志、配置键名（改了会让旧配置失效）、平台名（要和游戏原生一致）、`Fortegreen`（颜色枚举名）。
 
 原项目 Discord 服务器，欢迎加入交流、寻求帮助或提出建议：https://discord.gg/N7azGPHm5F
 
@@ -85,6 +113,14 @@ dotnet build -c Release
 ```
 
 产物位于 `src/bin/Release/net6.0/HydraMenu.dll`。由于项目依赖 `AmongUs.GameLibs.Steam`，需要能够访问项目内配置的 NuGet 源。
+
+在 macOS / Linux 上编译 IL2CPP 模组时，`AmongUs.GameLibs.Steam` 这个纯托管 dummy 包会缺引用，需要改指向游戏目录下 BepInEx 生成的 interop 程序集：
+
+```bash
+dotnet build src/HydraMenu.csproj -c Release -p:AmongUs="/path/to/Among Us"
+```
+
+`AmongUs` 指向的目录下必须有 `BepInEx/interop/`（跑过一次 BepInEx 就会自动生成）。
 
 # 免责声明
 

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Hazel;
+using HydraMenu.assets;
 using HydraMenu.network;
 using HydraMenu.ui.sections;
 using Il2CppInterop.Runtime;
@@ -17,6 +18,7 @@ namespace HydraMenu.modules
 		public static event Action OnGameLoad;
 		public static event Action OnDisconnect;
 
+		public static event Action<MeetingHud.VoterState[], NetworkedPlayerInfo, bool, bool> OnVotingComplete;
 		public static event Action OnMeetingEnd;
 		public static event Action<Minigame> OnOpenMinigame;
 		public static event Action<Ladder> OnUseLadder;
@@ -48,6 +50,9 @@ namespace HydraMenu.modules
 
 		// Network Events
 		public static event Action<InnerNetObject> OnNetObjectSpawn;
+
+		// The amount of votes the server needs before it kicks a player out of the lobby
+		private const byte VotekickThreshold = 3;
 
 		private static readonly HashSet<Il2CppSystem.Type> ShipNetObjects = [Il2CppType.From(typeof(ShipStatus)), Il2CppType.From(typeof(SkeldShipStatus)), Il2CppType.From(typeof(MiraShipStatus)), Il2CppType.From(typeof(PolusShipStatus)), Il2CppType.From(typeof(AirshipStatus)), Il2CppType.From(typeof(FungleShipStatus))];
 
@@ -81,6 +86,15 @@ namespace HydraMenu.modules
 				HostSection.shipList.Clear();
 
 				PublishEvent(OnDisconnect);
+			}
+		}
+
+		[HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.VotingComplete))]
+		class VotingComplete
+		{
+			static void Prefix(MeetingHud.VoterState[] states, NetworkedPlayerInfo exiled, bool tie, bool wasOverruled)
+			{
+				PublishEvent(OnVotingComplete, states, exiled, tie, wasOverruled);
 			}
 		}
 
@@ -143,7 +157,7 @@ namespace HydraMenu.modules
 				if(clientData != null)
 				{
 					PlatformSpecificData platformData = clientData.PlatformData;
-					Hydra.Log.LogMessage($"[PlayerLogger] {clientData.PlayerName} ({__instance.NetId}) joined on {platformData.Platform}. Friendcode {clientData.FriendCode}, PUID {clientData.ProductUserId}");
+					Hydra.Log.LogMessage($"[PlayerLogger] {clientData.PlayerName} ({__instance.NetId}) joined on {GameAssets.GetPlatformName(platformData.Platform)}. Friendcode {clientData.FriendCode}, PUID {clientData.ProductUserId}");
 				}
 				else
 				{
@@ -161,7 +175,7 @@ namespace HydraMenu.modules
 		{
 			static void Prefix(ClientData data, DisconnectReasons reason)
 			{
-				if(data.Character == null) return;
+				if(data.Character == null || data.Character.Data == null) return;
 
 				Hydra.Log.LogInfo($"[Disconnect Logger] {data.Character.Data.PlayerName} was disconnected with reason {reason}");
 
@@ -354,7 +368,7 @@ namespace HydraMenu.modules
 		[HarmonyPatch(typeof(VoteBanSystem), nameof(VoteBanSystem.AddVote))]
 		class PlayerVotekick
 		{
-			static void Postfix(int srcClient, int clientId)
+			static void Postfix(VoteBanSystem __instance, int srcClient, int clientId)
 			{
 				Hydra.Log.LogInfo($"[VotekickLogger] {srcClient} voted to kick out {clientId}");
 
@@ -364,7 +378,9 @@ namespace HydraMenu.modules
 
 				if(clientId == AmongUsClient.Instance.ClientId)
 				{
-					Hydra.notifications.Send("踢人投票记录", $"{source.PlayerName} 投票想踢出你。");
+					int voteCount = Utilities.GetVotekickCount(__instance, clientId);
+
+					Hydra.notifications.Send("踢人投票记录", $"{source.PlayerName} 投票想踢出你。（{voteCount}/{VotekickThreshold}）");
 				}
 
 				PublishEvent(OnPlayerVotekick, source, target);
@@ -378,7 +394,7 @@ namespace HydraMenu.modules
 			{
 				NetworkedPlayerInfo voter = GameData.Instance.GetPlayerById(srcPlayerId);
 				NetworkedPlayerInfo votee = GameData.Instance.GetPlayerById(suspectPlayerId);
-				if(voter == null || votee == null) return;
+				if(voter == null) return;
 
 				PublishEvent(OnPlayerCastVote, voter, votee);
 			}
@@ -419,8 +435,6 @@ namespace HydraMenu.modules
 					if(!inOld && inNew)
 					{
 						NetworkedPlayerInfo votee = GameData.Instance.GetPlayerById(voteeId);
-						if(votee == null) continue;
-
 						PublishEvent(OnPlayerCastVote, player.Data, votee);
 					}
 				}
@@ -520,6 +534,12 @@ namespace HydraMenu.modules
 		{
 			if(evt == null) return;
 			evt(arg1, arg2, arg3);
+		}
+
+		private static void PublishEvent<T1, T2, T3, T4>(Action<T1, T2, T3, T4> evt, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+		{
+			if(evt == null) return;
+			evt(arg1, arg2, arg3, arg4);
 		}
 	}
 }

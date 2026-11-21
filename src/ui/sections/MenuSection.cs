@@ -13,7 +13,7 @@ namespace HydraMenu.ui.sections
 		public override void Render()
 		{
 			// GUILayout.Label($"Texture 2D memory usage: {Texture2D.currentTextureMemory}");
-			Hydra.notifications.disableNotifications = GUILayout.Toggle(Hydra.notifications.disableNotifications, "禁用通知");
+			Hydra.notifications.DisableNotifications = GUILayout.Toggle(Hydra.notifications.DisableNotifications, "禁用通知");
 
 			GUILayout.Label($"主题色：{Lang.Tr(Styles.primaryColor)}");
 			Styles.primaryColor = (Styles.UIColors)GUILayout.HorizontalSlider((float)Styles.primaryColor, 0, Styles.ColorValues.Count - 1);

@@ -1,7 +1,6 @@
-﻿using HydraMenu.modules;
+﻿using HydraMenu.assets;
+using HydraMenu.modules;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace HydraMenu.ui.sections
@@ -10,38 +9,18 @@ namespace HydraMenu.ui.sections
 	{
 		public SpooferSection() : base("伪装") { }
 
-		public readonly Dictionary<string, int> versions = new Dictionary<string, int>()
-		{
-			// Current version at runtime
-			// VersionShower::Start uses ReferenceDataManager.Refdata.userFacingVersion to get version strings such as "17.1"
-			// however that doesn't seem to before the game fully loads, so we have to use Constants::AddressablesVersion to get a less human-understandable version string
-			{ $"{Constants.AddressablesVersion}（当前）", Constants.GetBroadcastVersion() },
-			{ "16.1.0", 50632950 },
-			{ "17.1", 50643450 },
-			{ "17.1.2", 50647000 },
-			{ "17.2", 50645050 },
-			{ "17.2.1", 50652900 },
-			{ "17.2.2", 50653700 },
-			{ "17.3", 50652400 },
-			{ "17.4", 50656300 },
-			{ "18.0", 50663350 },
-			{ "18.0 (build 7348)", 50663400 },
-			{ "19.0 (build 7488)", 50663650 }, // iOS
-			{ "19.0 (build 7489)", 50663600 } // PC
-		};
-
-		private int versionSelection = 0;
-
 		public override void Render()
 		{
 			GUILayout.Label("版本伪装：");
 			ModuleManager.spoofVersion.Enabled = GUILayout.Toggle(ModuleManager.spoofVersion.Enabled, "启用版本伪装");
 
-			GUILayout.Label($"伪装版本：{versions.ElementAt(versionSelection).Key}（{ModuleManager.spoofVersion.spoofedVersion}）");
-			versionSelection = (int)GUILayout.HorizontalSlider(versionSelection, 0, versions.Count - 1);
-			ModuleManager.spoofVersion.spoofedVersion = versions.ElementAt(versionSelection).Value;
+			GUILayout.Label($"伪装版本：{GameAssets.BroadcastVersions[ModuleManager.spoofVersion.SpoofedVersion]}（{ModuleManager.spoofVersion.SpoofedVersion}）");
+			ModuleManager.spoofVersion.SpoofedVersion = Controls.HorizontalListSlider(GameAssets.BroadcastVersions, ModuleManager.spoofVersion.SpoofedVersion);
 
 			ModuleManager.spoofVersion.UseModdedProtocol = GUILayout.Toggle(ModuleManager.spoofVersion.UseModdedProtocol, "使用模组协议");
+
+			GUILayout.Label($"模组注册伪装：{GameAssets.ModRegistrationGuids[CurrentModRegistration.ModRegistrationGuidString]}");
+			CurrentModRegistration.ModRegistrationGuidString = Controls.HorizontalListSlider(GameAssets.ModRegistrationGuids, CurrentModRegistration.ModRegistrationGuidString);
 
 			GUILayout.Space(5);
 			GUILayout.Label("等级伪装：");
@@ -81,8 +60,8 @@ namespace HydraMenu.ui.sections
 			GUILayout.Space(5);
 			GUILayout.Label("平台伪装：");
 
-			GUILayout.Label($"伪装平台：{Lang.Tr(ModuleManager.spoofDevice.SpoofedPlatform)}");
-			ModuleManager.spoofDevice.SpoofedPlatform = (Platforms)GUILayout.HorizontalSlider((float)ModuleManager.spoofDevice.SpoofedPlatform, 0, 10);
+			GUILayout.Label($"伪装平台：{GameAssets.GetPlatformName(ModuleManager.spoofDevice.SpoofedPlatform)}");
+			ModuleManager.spoofDevice.SpoofedPlatform = (Platforms)Controls.HorizontalListSlider(GameAssets.PlayerPlatforms, (int)ModuleManager.spoofDevice.SpoofedPlatform);
 		}
 
 		private void ClampSelectedLevel(uint newLevel)

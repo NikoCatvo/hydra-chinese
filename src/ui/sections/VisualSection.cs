@@ -20,6 +20,9 @@ namespace HydraMenu.ui.sections
 
 			ModuleManager.showGhosts.Enabled = GUILayout.Toggle(ModuleManager.showGhosts.Enabled, "显示幽灵");
 			ModuleManager.showGhostMessages.Enabled = GUILayout.Toggle(ModuleManager.showGhostMessages.Enabled, "显示幽灵的消息");
+
+			ModuleManager.showAnonymousVotes.Enabled = GUILayout.Toggle(ModuleManager.showAnonymousVotes.Enabled, "显示匿名投票内容");
+			ModuleManager.realtimeVotes.Enabled = GUILayout.Toggle(ModuleManager.realtimeVotes.Enabled, "实时显示票数");
 		}
 	}
 }
